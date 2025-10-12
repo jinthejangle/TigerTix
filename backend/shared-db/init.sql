@@ -1,4 +1,6 @@
--- SQLite
--- CREATE TABLE events(id INTEGER PRIMARY KEY, name TEXT NOT NULL, date TEXT NOT NULL, tickets_available INTEGER);
-
--- DROP TABLE events;
+CREATE TABLE IF NOT EXISTS events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    date TEXT NOT NULL,
+    ticket_count INTEGER NOT NULL DEFAULT 0,
+);

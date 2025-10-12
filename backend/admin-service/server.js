@@ -6,6 +6,7 @@ const app = express();
 const routes = require('./routes/adminRoutes');
 
 app.use(cors());
+app.use(express.json());    // Parse JSON input
 app.use('/api', routes);
 
 const PORT = 5001;
