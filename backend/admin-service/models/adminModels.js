@@ -1,7 +1,6 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
-
-const dbPath = path.resolve(__dirname, '../shared-db/database.sqlite');
+const dbPath = path.resolve(__dirname, '../../shared-db/database.sqlite');
 
 /**
  * Creates a new event in the database
@@ -12,14 +11,24 @@ const dbPath = path.resolve(__dirname, '../shared-db/database.sqlite');
  */
 const createEvent = (name, date, ticketCount) => {
     return new Promise((resolve, reject) => {
-        const db = new sqlite3.Database(dbPath);
+        const db = new sqlite3.Database(dbPath, (err) => {
+            if (err) {
+                console.error('Error opening database:', err);
+                reject(err);
+                return;
+            }
+        });
+        
         const sql = `INSERT INTO events (name, date, ticket_count) VALUES (?, ?, ?)`;
         
         db.run(sql, [name, date, ticketCount], function(err) {
-            db.close(); // Close connection
             if (err) {
+                console.error('Error inserting event:', err);
+                db.close();
                 reject(err);
             } else {
+                console.log('Event created with ID:', this.lastID);
+                db.close();
                 resolve(this.lastID);
             }
         });
@@ -32,14 +41,23 @@ const createEvent = (name, date, ticketCount) => {
  */
 const getAllEvents = () => {
     return new Promise((resolve, reject) => {
-        const db = new sqlite3.Database(dbPath);
+        const db = new sqlite3.Database(dbPath, (err) => {
+            if (err) {
+                console.error('Error opening database:', err);
+                reject(err);
+                return;
+            }
+        });
+        
         const sql = 'SELECT * FROM events ORDER BY created_at DESC';
         
         db.all(sql, [], (err, rows) => {
-            db.close(); // Close connection
             if (err) {
+                console.error('Error fetching events:', err);
+                db.close();
                 reject(err);
             } else {
+                db.close();
                 resolve(rows);
             }
         });
