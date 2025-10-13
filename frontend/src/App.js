@@ -1,3 +1,9 @@
+// Add to top of each file, for example in App.js:
+/**
+ * React frontend for TigerTix event management system
+ * Connects to client microservice for event data and purchases
+ */
+
 import React, { useEffect, useState } from 'react';
 import './App.css';
 

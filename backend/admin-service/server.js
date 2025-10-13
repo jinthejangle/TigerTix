@@ -1,3 +1,9 @@
+/**
+ * Admin microservice server for TigerTix
+ * Handles event creation and management
+ * Connects to shared SQLite database
+ */
+
 const express = require('express');
 const cors = require('cors');
 const app = express();

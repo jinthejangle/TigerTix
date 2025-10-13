@@ -1,3 +1,8 @@
+/**
+ * Client service controller for TigerTix
+ * Handles business logic for event browsing and ticket purchases
+ */
+
 const clientModel = require('../models/clientModel');
 
 /**

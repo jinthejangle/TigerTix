@@ -1,3 +1,9 @@
+/**
+ * Client microservice server for TigerTix
+ * Handles event browsing and ticket purchases
+ * Connects to app frontend and shared SQLite database
+ */
+
 const express = require('express');
 const cors = require('cors');
 const app = express();

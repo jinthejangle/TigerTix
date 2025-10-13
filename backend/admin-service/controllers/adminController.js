@@ -1,7 +1,12 @@
-const adminModel = require('../models/adminModels.js');
+/**
+ * Admin service controller for TigerTix
+ * Handles business logic for event creation and management
+ */
+
+const adminModel = require('../models/adminModel.js');
 
 /**
- * Creates a new event
+ * Creates a new event in the database
  * @param {Object} req Express request object
  * @param {Object} res Express response object
  */

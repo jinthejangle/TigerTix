@@ -1,3 +1,8 @@
+/**
+ * Client service data models for TigerTix
+ * Handles database operations for event browsing and ticket purchases
+ */
+
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
@@ -7,6 +12,7 @@ const dbPath = path.resolve(__dirname, '../../shared-db/database.sqlite');
 /**
  * Retrieve all events from the database
  * @returns {Promise<Array>} Array of all event objects
+ * @throws {Error} When database operation fails
  */
 const getAllEvents = () => {
     return new Promise((resolve, reject) => {
@@ -38,6 +44,7 @@ const getAllEvents = () => {
  * Purchase a ticket for an event (decrements ticket count)
  * @param {number} eventId Event ID
  * @returns {Promise<Object>} Updated event object with new ticket count
+ * @throws {Error} When event not found, no tickets available, or database error
  */
 const purchaseTicket = (eventId) => {
     return new Promise((resolve, reject) => {

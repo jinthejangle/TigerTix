@@ -1,3 +1,8 @@
+/**
+ * Admin service data models for TigerTix
+ * Handles database operations for event management
+ */
+
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const dbPath = path.resolve(__dirname, '../../shared-db/database.sqlite');
@@ -8,6 +13,7 @@ const dbPath = path.resolve(__dirname, '../../shared-db/database.sqlite');
  * @param {string} date Event date
  * @param {number} ticketCount Number of available tickets
  * @returns {Promise<number>} ID of the created event
+ * @throws {Error} When database operation fails
  */
 const createEvent = (name, date, ticketCount) => {
     return new Promise((resolve, reject) => {
@@ -38,6 +44,7 @@ const createEvent = (name, date, ticketCount) => {
 /**
  * Retrieve all events from the database
  * @returns {Promise<Array>} Array of all event objects
+ * @throws {Error} When database operation fails
  */
 const getAllEvents = () => {
     return new Promise((resolve, reject) => {
