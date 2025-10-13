@@ -1,4 +1,4 @@
-const adminModel = require('../models/adminModel');
+const adminModel = require('../models/adminModels.js');
 
 /**
  * Creates a new event
@@ -8,6 +8,7 @@ const adminModel = require('../models/adminModel');
 const createEvent = async (req, res) => {
     try {
         const { name, date, ticket_count } = req.body;
+        console.log('Received event data:', { name, date, ticket_count });
 
         // Input validation
         if (!name || !date || ticket_count === undefined) {
@@ -31,7 +32,7 @@ const createEvent = async (req, res) => {
     } catch (error) {
         console.error('Error creating event:', error);
         res.status(500).json({
-            error: 'Internal server error'
+            error: 'Internal server error: ' + error.message
         });
     }
 };
@@ -48,7 +49,7 @@ const listEvents = async (req, res) => {
     } catch (error) {
         console.error('Error fetching events:', error);
         res.status(500).json({
-            error: 'Internal server error'
+            error: 'Internal server error: ' + error.message
         });
     }
 };

@@ -1,8 +1,7 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-const dbPath = path.resolve(__dirname, '../../shared-db/events.db');
-const db = new sqlite3.Database(dbPath);
+const dbPath = path.resolve(__dirname, '../shared-db/database.sqlite');
 
 /**
  * Creates a new event in the database
@@ -12,9 +11,12 @@ const db = new sqlite3.Database(dbPath);
  * @returns {Promise<number>} ID of the created event
  */
 const createEvent = (name, date, ticketCount) => {
-    return new Promise((resolve, reject) => {       // Promise is an abstraction for a value that may be available
+    return new Promise((resolve, reject) => {
+        const db = new sqlite3.Database(dbPath);
         const sql = `INSERT INTO events (name, date, ticket_count) VALUES (?, ?, ?)`;
+        
         db.run(sql, [name, date, ticketCount], function(err) {
+            db.close(); // Close connection
             if (err) {
                 reject(err);
             } else {
@@ -28,16 +30,17 @@ const createEvent = (name, date, ticketCount) => {
  * Retrieve all events from the database
  * @returns {Promise<Array>} Array of all event objects
  */
-
 const getAllEvents = () => {
     return new Promise((resolve, reject) => {
-        const sql = 'SELECT * FROM events';
+        const db = new sqlite3.Database(dbPath);
+        const sql = 'SELECT * FROM events ORDER BY created_at DESC';
+        
         db.all(sql, [], (err, rows) => {
+            db.close(); // Close connection
             if (err) {
-                return reject(err);
-            } 
-            else {
-                return resolve(rows);
+                reject(err);
+            } else {
+                resolve(rows);
             }
         });
     });
