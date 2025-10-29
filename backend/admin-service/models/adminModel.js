@@ -71,7 +71,77 @@ const getAllEvents = () => {
     });
 };
 
+/**
+ * Deletes an event from the database by ID
+ * @param {number} eventId ID of the event to delete
+ * @returns {Promise<boolean>} True if event was deleted, false if not found
+ * @throws {Error} When database operation fails
+ */
+const deleteEvent = (eventId) => {
+    return new Promise((resolve, reject) => {
+        const db = new sqlite3.Database(dbPath, (err) => {
+            if (err) {
+                console.error('Error opening database:', err);
+                reject(err);
+                return;
+            }
+        });
+        
+        const sql = 'DELETE FROM events WHERE id = ?';
+        
+        db.run(sql, [eventId], function(err) {
+            if (err) {
+                console.error('Error deleting event:', err);
+                db.close();
+                reject(err);
+            } else {
+                const wasDeleted = this.changes > 0;
+                if (wasDeleted) {
+                    console.log(`Event with ID ${eventId} deleted successfully`);
+                } else {
+                    console.log(`No event found with ID ${eventId}`);
+                }
+                db.close();
+                resolve(wasDeleted);
+            }
+        });
+    });
+};
+
+/**
+ * Retrieves a specific event by ID from the database
+ * @param {number} eventId ID of the event to retrieve
+ * @returns {Promise<Object>} Event object if found, null if not found
+ * @throws {Error} When database operation fails
+ */
+const getEventById = (eventId) => {
+    return new Promise((resolve, reject) => {
+        const db = new sqlite3.Database(dbPath, (err) => {
+            if (err) {
+                console.error('Error opening database:', err);
+                reject(err);
+                return;
+            }
+        });
+        
+        const sql = 'SELECT * FROM events WHERE id = ?';
+        
+        db.get(sql, [eventId], (err, row) => {
+            if (err) {
+                console.error('Error fetching event:', err);
+                db.close();
+                reject(err);
+            } else {
+                db.close();
+                resolve(row || null);
+            }
+        });
+    });
+};
+
 module.exports = {
     createEvent,
-    getAllEvents
+    getAllEvents,
+    deleteEvent,
+    getEventById
 };
