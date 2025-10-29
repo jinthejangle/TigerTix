@@ -210,7 +210,7 @@ function App() {
       // Add welcome message when opening chat
       setMessages([{
         id: 1,
-        text: "Hello! I'm your TigerTix assistant. I can help you book tickets or show available events. How can I help you today?",
+        text: "Hello! I'm your TigerTix chatbot. I can help you book tickets or show available events. How can I help you today?",
         sender: 'bot',
         timestamp: new Date()
       }]);
@@ -224,7 +224,6 @@ function App() {
   const sendMessage = async () => {
     if (!inputMessage.trim() || isProcessing) return;
 
-    // Add user message to chat
     const userMessage = {
       id: Date.now(),
       text: inputMessage,
@@ -237,7 +236,6 @@ function App() {
     setIsProcessing(true);
 
     try {
-      // Call the LLM microservice
       const response = await fetch('http://localhost:7001/api/llm/parse', {
         method: 'POST',
         headers: {
@@ -252,18 +250,21 @@ function App() {
 
       const data = await response.json();
       
-      // Create bot response with booking confirmation options if needed
+      const botMessageId = Date.now() + 1;
+      
       let botResponse = {
-        id: Date.now() + 1,
+        id: botMessageId,
         sender: 'bot',
         timestamp: new Date(),
         requiresConfirmation: data.requires_confirmation,
-        eventData: data
+        eventData: data,
+        confirmationDisabled: false
       };
 
       if (data.requires_confirmation && data.event_name) {
         botResponse.text = `${data.message} Click "Confirm Booking" to proceed.`;
-        botResponse.confirmAction = () => confirmBooking(data.event_name, data.ticket_count);
+        // Pass the message ID to confirmBooking function
+        botResponse.confirmAction = () => confirmBooking(data.event_name, data.ticket_count, botMessageId);
       } else {
         botResponse.text = data.message || "I'm not sure how to help with that. I can book tickets or show available events.";
       }
@@ -291,7 +292,14 @@ function App() {
    * @param eventName Name of event to book tickets for
    * @param ticketCount Number of tickets to book (default 1)
    */
-  const confirmBooking = async (eventName, ticketCount = 1) => {
+  const confirmBooking = async (eventName, ticketCount = 1, messageId) => {
+    // Disable the button immediately in the message
+    setMessages(prev => prev.map(msg => 
+      msg.id === messageId 
+        ? { ...msg, confirmationDisabled: true }
+        : msg
+    ));
+    
     setIsProcessing(true);
     
     try {
@@ -332,6 +340,14 @@ function App() {
       
     } catch (error) {
       console.error('Error confirming booking:', error);
+      
+      // Re-enable the button on error
+      setMessages(prev => prev.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, confirmationDisabled: false }
+          : msg
+      ));
+      
       const errorMessage = {
         id: Date.now(),
         text: "Failed to complete booking. Please try again.",
@@ -484,7 +500,7 @@ function App() {
         {chatOpen && (
           <div className="chat-window" role="dialog" aria-label="Ticket booking assistant">
             <div className="chat-header">
-              <h3>TigerTix Assistant</h3>
+              <h3>TigerTix Chatbot</h3>
               <button 
                 onClick={toggleChat}
                 className="close-chat"
@@ -507,9 +523,10 @@ function App() {
                       <button 
                         onClick={message.confirmAction}
                         className="confirm-booking-btn"
-                        disabled={isProcessing}
+                        disabled={isProcessing || message.confirmationDisabled}
                       >
-                        {isProcessing ? 'Processing...' : 'Confirm Booking'}
+                        {isProcessing ? 'Processing...' : 
+                        message.confirmationDisabled ? 'Booking Confirmed' : 'Confirm Booking'}
                       </button>
                     )}
                   </div>
@@ -521,12 +538,11 @@ function App() {
               {isProcessing && (
                 <div className="message bot" role="status">
                   <div className="message-content">
-                    <p className="typing-indicator">Assistant is typing...</p>
+                    <p className="typing-indicator">Chatbot is typing...</p>
                   </div>
                 </div>
               )}
             </div>
-
             <div className="chat-input">
               <textarea
                 value={inputMessage}
@@ -534,7 +550,7 @@ function App() {
                 onKeyPress={handleKeyPress}
                 placeholder="Type your message... (e.g., 'Book 2 tickets for Jazz Night')"
                 disabled={isProcessing}
-                aria-label="Type your message to the assistant"
+                aria-label="Type your message to the chatbot"
               />
               {/* Microphone button */}
               <button
