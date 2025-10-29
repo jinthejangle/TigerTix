@@ -24,6 +24,117 @@ function App() {
   const [inputMessage, setInputMessage] = useState('');     // Current user input text
   const [isProcessing, setIsProcessing] = useState(false);  // Loading state for API calls
 
+  // Voice & TTS state/refs
+  const [isListening, setIsListening] = useState(false);
+  const [ttsOn, setTtsOn] = useState(true); // allow users to mute TTS if needed
+  const recognitionRef = React.useRef(null);
+  const abortRef = React.useRef(null); // track abort for cleanup
+  
+  // short 200ms A4 tone using Web Audio API
+  function beep() {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.value = 440;
+    o.connect(g);
+    g.connect(ctx.destination);
+    g.gain.setValueAtTime(0.1, ctx.currentTime);
+    o.start();
+    o.stop(ctx.currentTime + 0.2);
+  } 
+
+  /** 
+   * Create or reuse a SpeechRecognition instance 
+   */ 
+  const getRecognition = () => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return null;
+
+    if (!recognitionRef.current) {
+      const r = new SR();
+      r.lang = 'en-US';
+      r.interimResults = true;
+      r.continuous = false;
+      r.maxAlternatives = 1;
+
+      r.onstart = () => setIsListening(true);
+      r.onend = () => setIsListening(false);
+      r.onerror = (e) => {
+        console.error('SpeechRecognition error:', e);
+        setIsListening(false);
+      };
+
+      let interim = '';
+      r.onresult = (event) => {
+        let finalTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const tr = event.results[i][0].transcript;
+          if (event.results[i].isFinal) finalTranscript += tr;
+          else interim += tr;
+        }
+        if (interim) {
+          // Show interim only if user hasn't typed something else
+          setInputMessage(prev => (prev && prev.trim().length ? prev : interim));
+        }
+        if (finalTranscript) {
+          setInputMessage(finalTranscript.trim()); // put final text in the box
+          interim = '';
+        }
+      };
+
+      recognitionRef.current = r;
+    }
+    return recognitionRef.current;
+  };
+
+  // --- Start voice capture ---
+  const startListening = () => {
+    const rec = getRecognition();
+    if (!rec) {
+      // Graceful fallback
+      setMessages(prev => [...prev, {
+        id: Date.now(),
+        sender: 'bot',
+        text: "Sorry, your browser doesn’t support speech input. You can still type your request.",
+        timestamp: new Date()
+      }]);
+      return;
+    }
+    beep();
+    rec.start();
+    abortRef.current = () => rec.abort();
+  };
+
+  // --- Stop voice capture ---
+  const stopListening = () => {
+    const rec = recognitionRef.current;
+    if (rec) rec.stop();
+  };
+
+  // --- Cleanup on unmount ---
+  useEffect(() => {
+    return () => {
+      if (abortRef.current) abortRef.current();
+    };
+  }, []);
+
+  // --- Speak assistant responses ---
+  const speakText = (text) => {
+    if (!ttsOn || !text) return;
+    if (!window.speechSynthesis) return;
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 1.0;   // clarity
+    u.pitch = 1.0;
+    u.volume = 1.0;
+    const voices = window.speechSynthesis.getVoices();
+    const en = voices.find(v => /en[-_]/i.test(v.lang)) || voices[0];
+    if (en) u.voice = en;
+    window.speechSynthesis.cancel(); // avoid overlapping speech
+    window.speechSynthesis.speak(u);
+  };
+
+
   /**
    * Fetch events from client microservice on component mount
    */
@@ -47,7 +158,7 @@ function App() {
       })
       .finally(() => setLoading(false));
   }, []);
-
+  
   /**
    * Handle ticket purchase for a specific event
    */
@@ -158,6 +269,7 @@ function App() {
       }
 
       setMessages(prev => [...prev, botResponse]);
+      if (botResponse?.text) speakText(botResponse.text);
 
     } catch (error) {
       console.error('Error sending message:', error);
@@ -168,6 +280,7 @@ function App() {
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
+      speakText(errorMessage.text);
     } finally {
       setIsProcessing(false);
     }
@@ -208,7 +321,8 @@ function App() {
       };
       
       setMessages(prev => [...prev, confirmationMessage]);
-      
+      speakText(confirmationMessage.text);
+
       // Refresh events to update ticket counts
       const eventsResponse = await fetch('http://localhost:6001/api/events');
       if (eventsResponse.ok) {
@@ -422,6 +536,30 @@ function App() {
                 disabled={isProcessing}
                 aria-label="Type your message to the assistant"
               />
+              {/* Microphone button */}
+              <button
+                type="button"
+                onClick={isListening ? stopListening : startListening}
+                className={`mic-btn ${isListening ? 'listening' : ''}`}
+                aria-label={isListening ? "Stop voice input" : "Start voice input"}
+                title={isListening ? "Stop voice input" : "Start voice input"}
+                disabled={isProcessing}
+              >
+                {isListening ? '🎙️…' : '🎤'}
+              </button>
+
+              {/* TTS toggle */}
+              <button
+                type="button"
+                onClick={() => setTtsOn(v => !v)}
+                className="tts-toggle-btn"
+                aria-pressed={ttsOn}
+                aria-label={ttsOn ? "Turn off spoken responses" : "Turn on spoken responses"}
+                title={ttsOn ? "TTS: On" : "TTS: Off"}
+              >
+                🔊
+              </button>
+
               <button 
                 onClick={sendMessage}
                 disabled={!inputMessage.trim() || isProcessing}
