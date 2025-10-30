@@ -95,13 +95,14 @@ main ul {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  transition: background-color 0.2s ease;
   width: 100%;
   box-sizing: border-box;
+  min-height: 80px;
 }
 
 .event-info {
   text-align: left;
+  flex: 1;
 }
 
 .buy-ticket-btn {
@@ -112,7 +113,7 @@ main ul {
   border-radius: 5px;
   cursor: pointer;
   font-weight: bold;
-  transition: background-color 0.2s ease;
+  min-width: 120px;
 }
 
 .buy-ticket-btn:hover:not(:disabled) {
@@ -356,4 +357,76 @@ a:focus {
     right: 10px;
     bottom: 10px;
   }
+}
+
+/* Confirmation Modal Styles */
+.confirmation-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.confirmation-modal {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  color: #3D215E;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+.confirmation-modal h3 {
+  margin: 0 0 15px 0;
+  color: #522D80;
+  font-size: 20px;
+}
+
+.confirmation-modal p {
+  margin: 0 0 25px 0;
+  line-height: 1.5;
+}
+
+.confirmation-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.cancel-btn {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  flex: 1;
+}
+
+.cancel-btn:hover {
+  background: #5a6268;
+}
+
+.confirm-purchase-btn {
+  background: #F56600;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  flex: 1;
+}
+
+.confirm-purchase-btn:hover {
+  background: #f5a062;
 }
