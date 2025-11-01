@@ -12,19 +12,12 @@ const dbPath = path.resolve(__dirname, '../../shared-db/database.sqlite');
  * @param {string} name Event name
  * @param {string} date Event date
  * @param {number} ticketCount Number of available tickets
- * @param {string} database The path to the desired database
+ * @param {database} db The path to the desired database
  * @returns {Promise<number>} ID of the created event
  * @throws {Error} When database operation fails
  */
-const createEvent = (name, date, ticketCount, database) => {
+const createEvent = (name, date, ticketCount, db) => {
     return new Promise((resolve, reject) => {
-        const db = new sqlite3.Database(database, (err) => {
-            if (err) {
-                console.error('Error opening database:', err);
-                reject(err);
-                return;
-            }
-        });
         
         const sql = `INSERT INTO events (name, date, ticket_count) VALUES (?, ?, ?)`;
         
@@ -35,7 +28,6 @@ const createEvent = (name, date, ticketCount, database) => {
                 reject(err);
             } else {
                 console.log('Event created with ID:', this.lastID);
-                db.close();
                 resolve(this.lastID);
             }
         });
@@ -44,19 +36,12 @@ const createEvent = (name, date, ticketCount, database) => {
 
 /**
  * Retrieve all events from the database
- * @param {string} database The path to the desired database
+ * @param {string} db The path to the desired database
  * @returns {Promise<Array>} Array of all event objects
  * @throws {Error} When database operation fails
  */
-const getAllEvents = (database) => {
+const getAllEvents = (db) => {
     return new Promise((resolve, reject) => {
-        const db = new sqlite3.Database(database, (err) => {
-            if (err) {
-                console.error('Error opening database:', err);
-                reject(err);
-                return;
-            }
-        });
         
         const sql = 'SELECT * FROM events ORDER BY created_at DESC';
         
@@ -66,7 +51,6 @@ const getAllEvents = (database) => {
                 db.close();
                 reject(err);
             } else {
-                db.close();
                 resolve(rows);
             }
         });
