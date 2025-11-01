@@ -17,6 +17,8 @@ function App() {
   const [events, setEvents] = useState([]);                 // Stores array of event objects from database
   const [loading, setLoading] = useState(false);            // Tracks loading state for initial fetch
   const [purchaseStatus, setPurchaseStatus] = useState(''); // Stores status messages for user feedback
+  const [showConfirmation, setShowConfirmation] = useState(false);  // Controls confirmation modal visibility
+  const [pendingBooking, setPendingBooking] = useState(null);   // Stores details of pending booking for confirmation
   
   // Chatbot state
   const [chatOpen, setChatOpen] = useState(false);          // Controls chat window visibility
@@ -78,7 +80,7 @@ function App() {
           setInputMessage(prev => (prev && prev.trim().length ? prev : interim));
         }
         if (finalTranscript) {
-          setInputMessage(finalTranscript.trim()); // put final text in the box
+          setInputMessage(finalTranscript.trim()); // Put final text in the box
           interim = '';
         }
       };
@@ -88,7 +90,7 @@ function App() {
     return recognitionRef.current;
   };
 
-  // --- Start voice capture ---
+  // Start voice capture
   const startListening = () => {
     const rec = getRecognition();
     if (!rec) {
@@ -96,7 +98,7 @@ function App() {
       setMessages(prev => [...prev, {
         id: Date.now(),
         sender: 'bot',
-        text: "Sorry, your browser doesn’t support speech input. You can still type your request.",
+        text: "Sorry, your browser doesn't support speech input. You can still type your request.",
         timestamp: new Date()
       }]);
       return;
@@ -106,34 +108,36 @@ function App() {
     abortRef.current = () => rec.abort();
   };
 
-  // --- Stop voice capture ---
+  // Stop voice capture
   const stopListening = () => {
     const rec = recognitionRef.current;
     if (rec) rec.stop();
   };
 
-  // --- Cleanup on unmount ---
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (abortRef.current) abortRef.current();
     };
   }, []);
 
-  // --- Speak assistant responses ---
+  /**
+   * Handles text-to-speech for bot messages
+   * @param text The text to be spoken
+   */
   const speakText = (text) => {
     if (!ttsOn || !text) return;
     if (!window.speechSynthesis) return;
     const u = new SpeechSynthesisUtterance(text);
-    u.rate = 1.0;   // clarity
+    u.rate = 1.0;   // Clarity
     u.pitch = 1.0;
     u.volume = 1.0;
     const voices = window.speechSynthesis.getVoices();
     const en = voices.find(v => /en[-_]/i.test(v.lang)) || voices[0];
     if (en) u.voice = en;
-    window.speechSynthesis.cancel(); // avoid overlapping speech
+    window.speechSynthesis.cancel(); // Avoid overlapping speech
     window.speechSynthesis.speak(u);
   };
-
 
   /**
    * Fetch events from client microservice on component mount
@@ -163,8 +167,33 @@ function App() {
    * Handle ticket purchase for a specific event
    */
   const buyTicket = async (eventId, eventName) => {
+    // Store the pending booking and show confirmation
+    setPendingBooking({ eventId, eventName });
+    setShowConfirmation(true);
+  };
+
+  // New function to handle confirmed booking
+  const confirmPurchase = async () => {
+    if (!pendingBooking) return;
+    
+    const { eventId, eventName } = pendingBooking;
+    
     try {
       setPurchaseStatus(`Processing ticket purchase for ${eventName}...`);
+      setShowConfirmation(false);
+      
+      // Optimistically update the UI immediately
+      setEvents(prevEvents => 
+        prevEvents.map(event => 
+          event.id === eventId 
+            ? { 
+                ...event,
+                // Decrease ticket count immediately
+                ticket_count: Math.max(0, (event.ticket_count || event.tickets_available || 0) - 1)
+              }
+            : event
+        )
+      );
       
       const response = await fetch(`http://localhost:6001/api/events/${eventId}/purchase`, {
         method: 'POST',
@@ -179,8 +208,8 @@ function App() {
       }
 
       const result = await response.json();
-      console.log('Purchase result:', result);
       
+      // Update with server data (no visual change since we already updated)
       setEvents(prevEvents => 
         prevEvents.map(event => 
           event.id === eventId 
@@ -196,9 +225,31 @@ function App() {
       setTimeout(() => setPurchaseStatus(''), 5000);
     } catch (err) {
       console.error('Error purchasing ticket:', err);
+      
+      // Revert the optimistic update on error
+      setEvents(prevEvents => 
+        prevEvents.map(event => 
+          event.id === eventId 
+            ? { 
+                ...event,
+                // Restore original ticket count
+                ticket_count: (event.ticket_count || event.tickets_available || 0) + 1
+              }
+            : event
+        )
+      );
+      
       setPurchaseStatus(`Failed to purchase ticket for ${eventName}. ${err.message}`);
       setTimeout(() => setPurchaseStatus(''), 5000);
+    } finally {
+      setPendingBooking(null);
     }
+  };
+
+  // Function to cancel purchase
+  const cancelPurchase = () => {
+    setShowConfirmation(false);
+    setPendingBooking(null);
   };
 
   /**
@@ -483,6 +534,32 @@ function App() {
           )}
         </section>
       </main>
+
+      {/* Confirmation Modal */}
+      {showConfirmation && pendingBooking && (
+        <div className="confirmation-modal-overlay">
+          <div className="confirmation-modal" role="dialog" aria-labelledby="confirmation-title">
+            <h3 id="confirmation-title">Confirm Ticket Purchase</h3>
+            <p>Are you sure you want to purchase a ticket for <strong>"{pendingBooking.eventName}"</strong>?</p>
+            <div className="confirmation-buttons">
+              <button 
+                onClick={cancelPurchase}
+                className="cancel-btn"
+                aria-label="Cancel purchase"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmPurchase}
+                className="confirm-purchase-btn"
+                aria-label="Confirm ticket purchase"
+              >
+                Confirm Purchase
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Chatbot Interface */}
       <div className="chatbot-container">
