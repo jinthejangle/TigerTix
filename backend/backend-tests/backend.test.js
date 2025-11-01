@@ -57,8 +57,12 @@ describe('Admin Service Unit Tests', () => {
     })
 
     test('Gets event by id', async () => {
-        db.run(`INSERT INTO events (name, date, ticket_count, created_at)
+        db.serialize(() => {
+            db.run(`INSERT INTO events (name, date, ticket_count, created_at)
                 VALUES ('New Test Event', '11-3-2025', 100, '2025-10-01 12:00:00')`);
+            db.run(`INSERT INTO events (name, date, ticket_count, created_at)
+                VALUES ('New Test Event2', '11-3-2025', 200, '2025-10-02 12:00:00')`);
+        })
         const event = await adminModel.getEventById(2, db);
         expect(event).toEqual(
             {created_at: '2025-10-01 12:00:00', date: '11-3-2025', id: 2, name: 'New Test Event', ticket_count: 100}
