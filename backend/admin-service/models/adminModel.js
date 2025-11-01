@@ -64,16 +64,8 @@ const getAllEvents = (db) => {
  * @returns {Promise<boolean>} True if event was deleted, false if not found
  * @throws {Error} When database operation fails
  */
-const deleteEvent = (eventId, database) => {
+const deleteEvent = (eventId, db) => {
     return new Promise((resolve, reject) => {
-        const db = new sqlite3.Database(database, (err) => {
-            if (err) {
-                console.error('Error opening database:', err);
-                reject(err);
-                return;
-            }
-        });
-        
         const sql = 'DELETE FROM events WHERE id = ?';
         
         db.run(sql, [eventId], function(err) {
@@ -88,7 +80,6 @@ const deleteEvent = (eventId, database) => {
                 } else {
                     console.log(`No event found with ID ${eventId}`);
                 }
-                db.close();
                 resolve(wasDeleted);
             }
         });
@@ -98,19 +89,12 @@ const deleteEvent = (eventId, database) => {
 /**
  * Retrieves a specific event by ID from the database
  * @param {number} eventId ID of the event to retrieve
- * @param {string} database The path to the desired database
+ * @param {string} db The path to the desired database
  * @returns {Promise<Object>} Event object if found, null if not found
  * @throws {Error} When database operation fails
  */
-const getEventById = (eventId, database) => {
+const getEventById = (eventId, db) => {
     return new Promise((resolve, reject) => {
-        const db = new sqlite3.Database(database, (err) => {
-            if (err) {
-                console.error('Error opening database:', err);
-                reject(err);
-                return;
-            }
-        });
         
         const sql = 'SELECT * FROM events WHERE id = ?';
         
@@ -120,7 +104,6 @@ const getEventById = (eventId, database) => {
                 db.close();
                 reject(err);
             } else {
-                db.close();
                 resolve(row || null);
             }
         });

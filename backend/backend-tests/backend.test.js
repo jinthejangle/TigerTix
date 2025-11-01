@@ -37,10 +37,31 @@ describe('Admin Service Unit Tests', () => {
 
     test('Properly gets events', async () => {
         db.run(`INSERT INTO events (name, date, ticket_count, created_at)
-                    VALUES ('Test Event', '11-3-2025', 100, '2025-10-01 12:00:00')`)
+                    VALUES ('New Test Event', '11-3-2025', 100, '2025-10-01 12:00:00')`);
         const events = await adminModel.getAllEvents(db);
         expect(events[1]).toEqual(
-            {created_at: '2025-10-01 12:00:00', date: '11-3-2025', id: 2, name: 'Test Event', ticket_count: 100}
-        )
+            {created_at: '2025-10-01 12:00:00', date: '11-3-2025', id: 2, name: 'New Test Event', ticket_count: 100}
+        );
+    })
+
+    test('Properly deletes event', async () => {
+        db.run(`INSERT INTO events (name, date, ticket_count, created_at)
+                VALUES ('New Test Event', '11-3-2025', 100, '2025-10-01 12:00:00')`);
+        const deleted = await adminModel.deleteEvent(1, db);
+        expect(deleted).toBe(true);
+        
+        const events = await adminModel.getAllEvents(db);
+        expect(events[0]).toEqual(
+            {created_at: '2025-10-01 12:00:00', date: '11-3-2025', id: 2, name: 'New Test Event', ticket_count: 100}
+        );
+    })
+
+    test('Gets event by id', async () => {
+        db.run(`INSERT INTO events (name, date, ticket_count, created_at)
+                VALUES ('New Test Event', '11-3-2025', 100, '2025-10-01 12:00:00')`);
+        const event = await adminModel.getEventById(2, db);
+        expect(event).toEqual(
+            {created_at: '2025-10-01 12:00:00', date: '11-3-2025', id: 2, name: 'New Test Event', ticket_count: 100}
+        );
     })
 })
