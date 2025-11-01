@@ -12,12 +12,13 @@ const dbPath = path.resolve(__dirname, '../../shared-db/database.sqlite');
  * @param {string} name Event name
  * @param {string} date Event date
  * @param {number} ticketCount Number of available tickets
+ * @param {string} database The path to the desired database
  * @returns {Promise<number>} ID of the created event
  * @throws {Error} When database operation fails
  */
-const createEvent = (name, date, ticketCount) => {
+const createEvent = (name, date, ticketCount, database) => {
     return new Promise((resolve, reject) => {
-        const db = new sqlite3.Database(dbPath, (err) => {
+        const db = new sqlite3.Database(database, (err) => {
             if (err) {
                 console.error('Error opening database:', err);
                 reject(err);
@@ -43,12 +44,13 @@ const createEvent = (name, date, ticketCount) => {
 
 /**
  * Retrieve all events from the database
+ * @param {string} database The path to the desired database
  * @returns {Promise<Array>} Array of all event objects
  * @throws {Error} When database operation fails
  */
-const getAllEvents = () => {
+const getAllEvents = (database) => {
     return new Promise((resolve, reject) => {
-        const db = new sqlite3.Database(dbPath, (err) => {
+        const db = new sqlite3.Database(database, (err) => {
             if (err) {
                 console.error('Error opening database:', err);
                 reject(err);
@@ -74,12 +76,13 @@ const getAllEvents = () => {
 /**
  * Deletes an event from the database by ID
  * @param {number} eventId ID of the event to delete
+ * @param {string} database The path to the desired database
  * @returns {Promise<boolean>} True if event was deleted, false if not found
  * @throws {Error} When database operation fails
  */
-const deleteEvent = (eventId) => {
+const deleteEvent = (eventId, database) => {
     return new Promise((resolve, reject) => {
-        const db = new sqlite3.Database(dbPath, (err) => {
+        const db = new sqlite3.Database(database, (err) => {
             if (err) {
                 console.error('Error opening database:', err);
                 reject(err);
@@ -111,12 +114,13 @@ const deleteEvent = (eventId) => {
 /**
  * Retrieves a specific event by ID from the database
  * @param {number} eventId ID of the event to retrieve
+ * @param {string} database The path to the desired database
  * @returns {Promise<Object>} Event object if found, null if not found
  * @throws {Error} When database operation fails
  */
-const getEventById = (eventId) => {
+const getEventById = (eventId, database) => {
     return new Promise((resolve, reject) => {
-        const db = new sqlite3.Database(dbPath, (err) => {
+        const db = new sqlite3.Database(database, (err) => {
             if (err) {
                 console.error('Error opening database:', err);
                 reject(err);
