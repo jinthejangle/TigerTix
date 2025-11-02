@@ -1,5 +1,6 @@
 const adminModel = require('../admin-service/models/adminModel');
-const clientModel = require('../client-service/models/clientModel')
+const clientModel = require('../client-service/models/clientModel');
+const llmModel = require('../llm-driven-booking/models/llmModel');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const dbPath = path.resolve(__dirname, './test-database.sqlite');
@@ -113,6 +114,68 @@ describe('Client Service Unit Tests', () => {
         const updatedEvent = await clientModel.purchaseTicket(2, db);
         expect(updatedEvent).toEqual(
             {created_at: '2025-10-01 12:00:00', date: '11-3-2025', id: 2, name: 'Client Test Event', ticket_count: 99}
+        );
+    })
+})
+
+describe('LLM Booking Unit Tests', () => {
+
+    beforeEach(done => {
+        db = new sqlite3.Database(dbPath);
+        db.serialize(() => {
+            db.run(`DROP TABLE IF EXISTS events`);
+            db.run(`
+                CREATE TABLE IF NOT EXISTS events (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    date TEXT NOT NULL,
+                    ticket_count INTEGER NOT NULL DEFAULT 0,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+            db.run(`INSERT INTO events (name, date, ticket_count)
+                    VALUES ('Test Event', '11-3-2025', 100)`, done);
+        }) 
+    })
+
+    afterAll(done => {
+        db.serialize(() => {
+            db.run(`DROP TABLE IF EXISTS events`);
+            db.close(done);
+        })
+    })
+
+    test('LLM parsing works properly', async () => {
+        const parsedMessage = await llmModel.parseUserIntent('Book 1 ticket for Test Event');
+        expect(parsedMessage).toEqual(
+            {intent: 'book', event_name: 'test event', ticket_count: 1, confidence: 0.8}
+        );
+    })
+
+    test('Properly gets events', async () => {
+        db.run(`INSERT INTO events (name, date, ticket_count, created_at)
+                    VALUES ('LLM Test Event', '11-3-2025', 100, '2025-10-01 12:00:00')`);
+        const events = await llmModel.getAvailableEvents(db);
+        expect(events[1]).toEqual(
+            {date: '11-3-2025', id: 2, name: 'LLM Test Event', ticket_count: 100}
+        );
+    })
+
+    test('Finds event by name', async () => {
+        db.run(`INSERT INTO events (name, date, ticket_count, created_at)
+                    VALUES ('LLM Test Event', '11-3-2025', 100, '2025-10-01 12:00:00')`);
+        const event = await llmModel.findEventByName('LLM Test Event');
+        expect(event).toEqual(
+            {date: '11-3-2025', id: 2, name: 'LLM Test Event', ticket_count: 100}
+        );
+    })
+
+    test('Properly books tickets', async () => {
+        db.run(`INSERT INTO events (name, date, ticket_count, created_at)
+                    VALUES ('LLM Test Event', '11-3-2025', 100, '2025-10-01 12:00:00')`);
+        const bookedEvent = await llmModel.processBooking(2, 2, db);
+        expect(bookedEvent).toEqual(
+            {event_name: 'LLM Test Event', remaining_tickets: 98, tickets_booked: 2}
         );
     })
 })
