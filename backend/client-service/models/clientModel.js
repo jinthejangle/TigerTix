@@ -18,7 +18,7 @@ const dbPath = path.resolve(__dirname, '../../shared-db/database.sqlite');
 const getAllEvents = (db) => {
     return new Promise((resolve, reject) => {
 
-        const sql = 'SELECT * FROM events ORDER BY created_at DESC';
+        const sql = 'SELECT id, name, date, ticket_count FROM events ORDER BY created_at DESC';
         
         db.all(sql, [], (err, rows) => {
             if (err) {
@@ -79,7 +79,7 @@ const purchaseTicket = (eventId, db) => {
                         }
                         
                         // Get updated event data
-                        db.get('SELECT * FROM events WHERE id = ?', [eventId], (err, updatedEvent) => {
+                        db.get('SELECT id, name, date, ticket_count FROM events WHERE id = ?', [eventId], (err, updatedEvent) => {
                             if (err) {
                                 console.error('Error fetching updated event:', err);
                                 db.run('ROLLBACK');

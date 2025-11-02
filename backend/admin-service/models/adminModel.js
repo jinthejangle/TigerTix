@@ -43,7 +43,7 @@ const createEvent = (name, date, ticketCount, db) => {
 const getAllEvents = (db) => {
     return new Promise((resolve, reject) => {
         
-        const sql = 'SELECT * FROM events ORDER BY created_at DESC';
+        const sql = 'SELECT id, name, date, ticket_count FROM events ORDER BY created_at DESC';
         
         db.all(sql, [], (err, rows) => {
             if (err) {
@@ -89,14 +89,14 @@ const deleteEvent = (eventId, db) => {
 /**
  * Retrieves a specific event by ID from the database
  * @param {number} eventId ID of the event to retrieve
- * @param {string} db The path to the desired database
+ * @param {database} db The path to the desired database
  * @returns {Promise<Object>} Event object if found, null if not found
  * @throws {Error} When database operation fails
  */
 const getEventById = (eventId, db) => {
     return new Promise((resolve, reject) => {
         
-        const sql = 'SELECT * FROM events WHERE id = ?';
+        const sql = 'SELECT id, name, date, ticket_count FROM events WHERE id = ?';
         
         db.get(sql, [eventId], (err, row) => {
             if (err) {
