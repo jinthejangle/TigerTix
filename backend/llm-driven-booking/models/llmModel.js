@@ -201,7 +201,7 @@ const findEventByName = async (eventName) => {
 /**
  * Process ticket booking with transaction safety
  */
-const processBooking = (eventId, ticketCount = 1, db) => {
+const processBooking = (eventId, ticketCount = 1, db = baseDb) => {
   return new Promise((resolve, reject) => {
 
     db.serialize(() => {
