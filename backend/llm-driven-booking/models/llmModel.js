@@ -172,7 +172,7 @@ const getAvailableEvents = (db = baseDb) => {
  */
 const findEventByName = async (eventName) => {
   try {
-    const events = await getAvailableEvents(db);
+    const events = await getAvailableEvents();
     if (events.length === 0) return null;
     
     const lowerSearch = eventName.toLowerCase();
