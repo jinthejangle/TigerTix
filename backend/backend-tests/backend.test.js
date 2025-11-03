@@ -164,7 +164,7 @@ describe('LLM Booking Unit Tests', () => {
     test('Finds event by name', async () => {
         db.run(`INSERT INTO events (name, date, ticket_count, created_at)
                     VALUES ('LLM Test Event', '11-3-2025', 100, '2025-10-01 12:00:00')`);
-        const event = await llmModel.findEventByName('LLM Test Event');
+        const event = await llmModel.findEventByName('LLM Test Event', db);
         expect(event).toEqual(
             {date: '11-3-2025', id: 2, name: 'LLM Test Event', ticket_count: 100}
         );

@@ -170,9 +170,9 @@ const getAvailableEvents = (db = baseDb) => {
 /**
  * Find event by name (fuzzy matching)
  */
-const findEventByName = async (eventName) => {
+const findEventByName = async (eventName, db = baseDb) => {
   try {
-    const events = await getAvailableEvents();
+    const events = await getAvailableEvents(db);
     if (events.length === 0) return null;
     
     const lowerSearch = eventName.toLowerCase();
