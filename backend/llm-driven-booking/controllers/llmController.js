@@ -3,6 +3,7 @@
  */
 
 const llmModel = require('../models/llmModel');
+const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 
 const dbPath = path.resolve(__dirname, '../../shared-db/database.sqlite');
