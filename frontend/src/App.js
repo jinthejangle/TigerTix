@@ -35,16 +35,14 @@ function App() {
   // short 200ms A4 tone using Web Audio API
   function beep() {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
-    o.type = 'sine';
-    o.frequency.value = 440;
-    o.connect(g);
-    g.connect(ctx.destination);
-    g.gain.setValueAtTime(0.1, ctx.currentTime);
-    o.start();
-    o.stop(ctx.currentTime + 0.2);
-  } 
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain).connect(ctx.destination);
+    gain.gain.value = 0.1;
+    osc.frequency.value = 440;
+    osc.start();
+    osc.stop(ctx.currentTime + 0.2);
+  }
 
   /** 
    * Create or reuse a SpeechRecognition instance 
@@ -70,18 +68,21 @@ function App() {
       let interim = '';
       r.onresult = (event) => {
         let finalTranscript = '';
+        let interimTranscript = '';
+        
         for (let i = event.resultIndex; i < event.results.length; i++) {
-          const tr = event.results[i][0].transcript;
-          if (event.results[i].isFinal) finalTranscript += tr;
-          else interim += tr;
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+          } else {
+            interimTranscript += transcript;
+          }
         }
-        if (interim) {
-          // Show interim only if user hasn't typed something else
-          setInputMessage(prev => (prev && prev.trim().length ? prev : interim));
-        }
+        
         if (finalTranscript) {
-          setInputMessage(finalTranscript.trim()); // Put final text in the box
-          interim = '';
+          setInputMessage(finalTranscript.trim());
+        } else if (interimTranscript) {
+          setInputMessage(prev => prev.trim() ? prev : interimTranscript);
         }
       };
 
@@ -126,17 +127,15 @@ function App() {
    * @param text The text to be spoken
    */
   const speakText = (text) => {
-    if (!ttsOn || !text) return;
-    if (!window.speechSynthesis) return;
-    const u = new SpeechSynthesisUtterance(text);
-    u.rate = 1.0;   // Clarity
-    u.pitch = 1.0;
-    u.volume = 1.0;
+    if (!ttsOn || !text || !window.speechSynthesis) return;
+    
+    const utterance = new SpeechSynthesisUtterance(text);
     const voices = window.speechSynthesis.getVoices();
-    const en = voices.find(v => /en[-_]/i.test(v.lang)) || voices[0];
-    if (en) u.voice = en;
-    window.speechSynthesis.cancel(); // Avoid overlapping speech
-    window.speechSynthesis.speak(u);
+    const englishVoice = voices.find(v => /en[-_]/i.test(v.lang));
+    
+    if (englishVoice) utterance.voice = englishVoice;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
   };
 
   /**
@@ -189,7 +188,7 @@ function App() {
             ? { 
                 ...event,
                 // Decrease ticket count immediately
-                ticket_count: Math.max(0, (event.ticket_count || event.tickets_available || 0) - 1)
+                ticket_count: Math.max(0, event.ticket_count - 1)
               }
             : event
         )
@@ -233,7 +232,7 @@ function App() {
             ? { 
                 ...event,
                 // Restore original ticket count
-                ticket_count: (event.ticket_count || event.tickets_available || 0) + 1
+                ticket_count: event.ticket_count + 1
               }
             : event
         )
@@ -301,27 +300,24 @@ function App() {
 
       const data = await response.json();
       
-      const botMessageId = Date.now() + 1;
-      
-      let botResponse = {
-        id: botMessageId,
+      const botResponse = {
+        id: Date.now() + 1,
         sender: 'bot',
         timestamp: new Date(),
+        text: data.requires_confirmation && data.event_name
+          ? `${data.message} Click "Confirm Booking" to proceed.`
+          : (data.message || "I'm not sure how to help with that. I can book tickets or show available events."),
         requiresConfirmation: data.requires_confirmation,
         eventData: data,
         confirmationDisabled: false
       };
 
       if (data.requires_confirmation && data.event_name) {
-        botResponse.text = `${data.message} Click "Confirm Booking" to proceed.`;
-        // Pass the message ID to confirmBooking function
-        botResponse.confirmAction = () => confirmBooking(data.event_name, data.ticket_count, botMessageId);
-      } else {
-        botResponse.text = data.message || "I'm not sure how to help with that. I can book tickets or show available events.";
+        botResponse.confirmAction = () => confirmBooking(data.event_name, data.ticket_count, botResponse.id);
       }
 
       setMessages(prev => [...prev, botResponse]);
-      if (botResponse?.text) speakText(botResponse.text);
+      if (botResponse.text) speakText(botResponse.text);
 
     } catch (error) {
       console.error('Error sending message:', error);
@@ -478,7 +474,7 @@ function App() {
           ) : (
             <ul role="list" aria-label="List of campus events">
               {events.map((event) => {
-                const ticketsAvailable = event.ticket_count || event.tickets_available || 0;
+                const ticketsAvailable = event.ticket_count ?? 0;
                 const isSoldOut = ticketsAvailable === 0;
                 
                 return (
