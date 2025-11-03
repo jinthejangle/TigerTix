@@ -55,7 +55,7 @@ function App() {
       const r = new SR();
       r.lang = 'en-US';
       r.interimResults = true;
-      r.continuous = false;
+      r.continuous = true;
       r.maxAlternatives = 1;
 
       r.onstart = () => setIsListening(true);
