@@ -3,6 +3,10 @@
  */
 
 const llmModel = require('../models/llmModel');
+const sqlite3 = require('sqlite3').verbose();
+
+const dbPath = path.resolve(__dirname, '../../shared-db/database.sqlite');
+const db = new sqlite3.Database(dbPath);
 
 /**
  * Parse natural language request
@@ -93,7 +97,7 @@ const confirmBooking = async (req, res) => {
       return res.status(400).json({ error: 'Event ID or name is required' });
     }
 
-    const result = await llmModel.processBooking(eventId, ticket_count || 1);
+    const result = await llmModel.processBooking(eventId, ticket_count || 1, db);
     
     res.json({
       success: true,
