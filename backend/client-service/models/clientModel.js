@@ -8,6 +8,7 @@ const path = require('path');
 
 // Path to shared database - go up from models/ to client-service/, then to backend/, then into shared-db/
 const dbPath = path.resolve(__dirname, '../../shared-db/database.sqlite');
+const baseDb = new sqlite3.Database(dbPath);
 
 /**
  * Retrieve all events from the database
@@ -15,7 +16,7 @@ const dbPath = path.resolve(__dirname, '../../shared-db/database.sqlite');
  * @returns {Promise<Array>} Array of all event objects
  * @throws {Error} When database operation fails
  */
-const getAllEvents = (db) => {
+const getAllEvents = (db = baseDb) => {
     return new Promise((resolve, reject) => {
 
         const sql = 'SELECT id, name, date, ticket_count FROM events ORDER BY created_at DESC';
@@ -40,7 +41,7 @@ const getAllEvents = (db) => {
  * @returns {Promise<Object>} Updated event object with new ticket count
  * @throws {Error} When event not found, no tickets available, or database error
  */
-const purchaseTicket = (eventId, db) => {
+const purchaseTicket = (eventId, db = baseDb) => {
     return new Promise((resolve, reject) => {
         
         // Use a transaction to ensure atomic updates

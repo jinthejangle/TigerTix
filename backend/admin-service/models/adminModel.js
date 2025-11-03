@@ -6,6 +6,7 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const dbPath = path.resolve(__dirname, '../../shared-db/database.sqlite');
+const baseDb = new sqlite3.Database(dbPath);
 
 /**
  * Creates a new event in the database
@@ -16,7 +17,7 @@ const dbPath = path.resolve(__dirname, '../../shared-db/database.sqlite');
  * @returns {Promise<number>} ID of the created event
  * @throws {Error} When database operation fails
  */
-const createEvent = (name, date, ticketCount, db) => {
+const createEvent = (name, date, ticketCount, db = baseDb) => {
     return new Promise((resolve, reject) => {
         
         const sql = `INSERT INTO events (name, date, ticket_count) VALUES (?, ?, ?)`;
@@ -40,7 +41,7 @@ const createEvent = (name, date, ticketCount, db) => {
  * @returns {Promise<Array>} Array of all event objects
  * @throws {Error} When database operation fails
  */
-const getAllEvents = (db) => {
+const getAllEvents = (db = baseDb) => {
     return new Promise((resolve, reject) => {
         
         const sql = 'SELECT id, name, date, ticket_count FROM events ORDER BY created_at DESC';
@@ -64,7 +65,7 @@ const getAllEvents = (db) => {
  * @returns {Promise<boolean>} True if event was deleted, false if not found
  * @throws {Error} When database operation fails
  */
-const deleteEvent = (eventId, db) => {
+const deleteEvent = (eventId, db = baseDb) => {
     return new Promise((resolve, reject) => {
         const sql = 'DELETE FROM events WHERE id = ?';
         
@@ -93,7 +94,7 @@ const deleteEvent = (eventId, db) => {
  * @returns {Promise<Object>} Event object if found, null if not found
  * @throws {Error} When database operation fails
  */
-const getEventById = (eventId, db) => {
+const getEventById = (eventId, db = baseDb) => {
     return new Promise((resolve, reject) => {
         
         const sql = 'SELECT id, name, date, ticket_count FROM events WHERE id = ?';

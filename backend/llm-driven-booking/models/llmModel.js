@@ -7,6 +7,7 @@ const path = require('path');
 const ollama = require('ollama');
 
 const dbPath = path.resolve(__dirname, '../../shared-db/database.sqlite');
+const baseDb = new sqlite3.Database(dbPath);
 
 // Configuration for Ollama
 const OLLAMA_CONFIG = {
@@ -149,7 +150,7 @@ const parseWithEnhancedKeywords = (userMessage) => {
 /**
  * Get available events from database - FIXED PATH
  */
-const getAvailableEvents = (db) => {
+const getAvailableEvents = (db = baseDb) => {
   return new Promise((resolve, reject) => {
     
     const sql = 'SELECT id, name, date, ticket_count FROM events WHERE ticket_count > 0 ORDER BY date';
