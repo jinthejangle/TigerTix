@@ -17,7 +17,7 @@ const OLLAMA_CONFIG = {
 
 // Fallback keyword patterns
 const FALLBACK_PATTERNS = {
-  book: ['book', 'reserve', 'buy', 'purchase', 'get ticket'],
+  book: ['book', 'reserve', 'buy', 'purchase', 'get ticket', 'tickets'],
   events: ['events', 'shows', 'concerts', 'what\'s available'],
   greeting: ['hello', 'hi', 'hey', 'greetings']
 };
@@ -214,13 +214,6 @@ const processBooking = (eventId, ticketCount = 1, db) => {
           reject(err);
           return;
         }
-
-        /*if (!row) {
-          db.run('ROLLBACK');
-          db.close();
-          reject(new Error('Event not found'));
-          return;
-        }*/
 
         if (row.ticket_count < ticketCount) {
           db.run('ROLLBACK');
