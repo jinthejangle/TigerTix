@@ -149,17 +149,8 @@ const parseWithEnhancedKeywords = (userMessage) => {
 /**
  * Get available events from database - FIXED PATH
  */
-const getAvailableEvents = () => {
+const getAvailableEvents = (db) => {
   return new Promise((resolve, reject) => {
-    console.log('Looking for database at:', dbPath);
-    
-    const db = new sqlite3.Database(dbPath, (err) => {
-      if (err) {
-        console.error('Database connection error:', err);
-        reject(err);
-        return;
-      }
-    });
     
     const sql = 'SELECT id, name, date, ticket_count FROM events WHERE ticket_count > 0 ORDER BY date';
     
@@ -171,7 +162,6 @@ const getAvailableEvents = () => {
         console.log(`Found ${rows.length} events`);
         resolve(rows);
       }
-      db.close();
     });
   });
 };
@@ -181,7 +171,7 @@ const getAvailableEvents = () => {
  */
 const findEventByName = async (eventName) => {
   try {
-    const events = await getAvailableEvents();
+    const events = await getAvailableEvents(db);
     if (events.length === 0) return null;
     
     const lowerSearch = eventName.toLowerCase();
@@ -210,14 +200,8 @@ const findEventByName = async (eventName) => {
 /**
  * Process ticket booking with transaction safety
  */
-const processBooking = (eventId, ticketCount = 1) => {
+const processBooking = (eventId, ticketCount = 1, db) => {
   return new Promise((resolve, reject) => {
-    const db = new sqlite3.Database(dbPath, (err) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-    });
 
     db.serialize(() => {
       db.run('BEGIN TRANSACTION');
@@ -231,12 +215,12 @@ const processBooking = (eventId, ticketCount = 1) => {
           return;
         }
 
-        if (!row) {
+        /*if (!row) {
           db.run('ROLLBACK');
           db.close();
           reject(new Error('Event not found'));
           return;
-        }
+        }*/
 
         if (row.ticket_count < ticketCount) {
           db.run('ROLLBACK');
@@ -265,7 +249,6 @@ const processBooking = (eventId, ticketCount = 1) => {
                 return;
               }
 
-              db.close();
               resolve({
                 event_name: row.name,
                 tickets_booked: ticketCount,

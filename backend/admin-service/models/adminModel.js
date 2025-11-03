@@ -12,18 +12,12 @@ const dbPath = path.resolve(__dirname, '../../shared-db/database.sqlite');
  * @param {string} name Event name
  * @param {string} date Event date
  * @param {number} ticketCount Number of available tickets
+ * @param {database} db The path to the desired database
  * @returns {Promise<number>} ID of the created event
  * @throws {Error} When database operation fails
  */
-const createEvent = (name, date, ticketCount) => {
+const createEvent = (name, date, ticketCount, db) => {
     return new Promise((resolve, reject) => {
-        const db = new sqlite3.Database(dbPath, (err) => {
-            if (err) {
-                console.error('Error opening database:', err);
-                reject(err);
-                return;
-            }
-        });
         
         const sql = `INSERT INTO events (name, date, ticket_count) VALUES (?, ?, ?)`;
         
@@ -34,7 +28,6 @@ const createEvent = (name, date, ticketCount) => {
                 reject(err);
             } else {
                 console.log('Event created with ID:', this.lastID);
-                db.close();
                 resolve(this.lastID);
             }
         });
@@ -43,20 +36,14 @@ const createEvent = (name, date, ticketCount) => {
 
 /**
  * Retrieve all events from the database
+ * @param {string} db The path to the desired database
  * @returns {Promise<Array>} Array of all event objects
  * @throws {Error} When database operation fails
  */
-const getAllEvents = () => {
+const getAllEvents = (db) => {
     return new Promise((resolve, reject) => {
-        const db = new sqlite3.Database(dbPath, (err) => {
-            if (err) {
-                console.error('Error opening database:', err);
-                reject(err);
-                return;
-            }
-        });
         
-        const sql = 'SELECT * FROM events ORDER BY created_at DESC';
+        const sql = 'SELECT id, name, date, ticket_count FROM events ORDER BY created_at DESC';
         
         db.all(sql, [], (err, rows) => {
             if (err) {
@@ -64,7 +51,6 @@ const getAllEvents = () => {
                 db.close();
                 reject(err);
             } else {
-                db.close();
                 resolve(rows);
             }
         });
@@ -74,19 +60,12 @@ const getAllEvents = () => {
 /**
  * Deletes an event from the database by ID
  * @param {number} eventId ID of the event to delete
+ * @param {string} database The path to the desired database
  * @returns {Promise<boolean>} True if event was deleted, false if not found
  * @throws {Error} When database operation fails
  */
-const deleteEvent = (eventId) => {
+const deleteEvent = (eventId, db) => {
     return new Promise((resolve, reject) => {
-        const db = new sqlite3.Database(dbPath, (err) => {
-            if (err) {
-                console.error('Error opening database:', err);
-                reject(err);
-                return;
-            }
-        });
-        
         const sql = 'DELETE FROM events WHERE id = ?';
         
         db.run(sql, [eventId], function(err) {
@@ -101,7 +80,6 @@ const deleteEvent = (eventId) => {
                 } else {
                     console.log(`No event found with ID ${eventId}`);
                 }
-                db.close();
                 resolve(wasDeleted);
             }
         });
@@ -111,20 +89,14 @@ const deleteEvent = (eventId) => {
 /**
  * Retrieves a specific event by ID from the database
  * @param {number} eventId ID of the event to retrieve
+ * @param {database} db The path to the desired database
  * @returns {Promise<Object>} Event object if found, null if not found
  * @throws {Error} When database operation fails
  */
-const getEventById = (eventId) => {
+const getEventById = (eventId, db) => {
     return new Promise((resolve, reject) => {
-        const db = new sqlite3.Database(dbPath, (err) => {
-            if (err) {
-                console.error('Error opening database:', err);
-                reject(err);
-                return;
-            }
-        });
         
-        const sql = 'SELECT * FROM events WHERE id = ?';
+        const sql = 'SELECT id, name, date, ticket_count FROM events WHERE id = ?';
         
         db.get(sql, [eventId], (err, row) => {
             if (err) {
@@ -132,7 +104,6 @@ const getEventById = (eventId) => {
                 db.close();
                 reject(err);
             } else {
-                db.close();
                 resolve(row || null);
             }
         });
