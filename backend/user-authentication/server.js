@@ -16,7 +16,7 @@ app.use(cors({
   credentials: true
 }));
 
-app.use('/auth', authRoutes);
+app.use('/api/auth', authRoutes);
 
 app.get('/', (req, res) => res.json({ msg: 'user-authentication service' }));
 

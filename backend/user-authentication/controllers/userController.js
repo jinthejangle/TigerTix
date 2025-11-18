@@ -63,7 +63,7 @@ function logout(req, res) {
 
 // verifyToken (acts as middleware; export so other services can require it)
 function verifyToken(req, res, next) {
-  const token = req.cookies && req.cookies[COOKIE_NAME];
+  const token = (req.cookies && req.cookies[COOKIE_NAME]) || (req.headers.authorization || '').replace(/^Bearer\s+/, '');
   if (!token) return res.status(401).json({ error: 'no token provided' });
 
   jwt.verify(token, JWT_SECRET, (err, payload) => {

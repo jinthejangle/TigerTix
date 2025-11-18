@@ -174,7 +174,7 @@ function App() {
   useEffect(() => {
     const fetchMe = async () => {
       try {
-        const res = await fetch('http://localhost:4002/auth/me', {
+        const res = await fetch('http://localhost:4002/api/auth/me', {
           method: 'GET',
           credentials: 'include' // send HTTP-only cookie
         });
@@ -494,7 +494,7 @@ function App() {
               <button onClick={async () => {
                 // call logout endpoint to clear cookie
                 try {
-                  await fetch('http://localhost:4002/auth/logout', {
+                  await fetch('http://localhost:4002/api/auth/logout', {
                     method: 'POST',
                     credentials: 'include'
                   });
@@ -741,7 +741,7 @@ function App() {
                 password: form.get('password')
               };
               try {
-                const res = await fetch('http://localhost:4002/auth/login', {
+                const res = await fetch('http://localhost:4002/api/auth/login', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify(body),
@@ -753,7 +753,7 @@ function App() {
                   return;
                 }
                 // fetch current user
-                const me = await fetch('http://localhost:4002/auth/me', { credentials: 'include' });
+                const me = await fetch('http://localhost:4002/api/auth/me', { credentials: 'include' });
                 if (me.ok) {
                   const meJson = await me.json();
                   setUser({ id: meJson.id, email: meJson.email });
@@ -788,7 +788,7 @@ function App() {
                 password: form.get('password')
               };
               try {
-                const res = await fetch('http://localhost:4002/auth/register', {
+                const res = await fetch('http://localhost:4002/api/auth/register', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify(body)
