@@ -20,6 +20,11 @@ function App() {
   const [showConfirmation, setShowConfirmation] = useState(false);  // Controls confirmation modal visibility
   const [pendingBooking, setPendingBooking] = useState(null);   // Stores details of pending booking for confirmation
   
+  // Authentication state (added — popup modal approach)
+  const [user, setUser] = useState(null);                   // { id, email } when logged in
+  const [showLogin, setShowLogin] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
+
   // Chatbot state
   const [chatOpen, setChatOpen] = useState(false);          // Controls chat window visibility
   const [messages, setMessages] = useState([]);             // Stores all chat messages
@@ -163,6 +168,31 @@ function App() {
   }, []);
   
   /**
+   * Check current authenticated user on app load
+   * Calls user-authentication /auth/me to determine session (cookie-based)
+   */
+  useEffect(() => {
+    const fetchMe = async () => {
+      try {
+        const res = await fetch('http://localhost:4002/auth/me', {
+          method: 'GET',
+          credentials: 'include' // send HTTP-only cookie
+        });
+        if (!res.ok) {
+          setUser(null);
+          return;
+        }
+        const data = await res.json();
+        setUser({ id: data.id, email: data.email });
+      } catch (err) {
+        console.error('fetchMe error', err);
+        setUser(null);
+      }
+    };
+    fetchMe();
+  }, []);
+
+  /**
    * Handle ticket purchase for a specific event
    */
   const buyTicket = async (eventId, eventName) => {
@@ -199,6 +229,7 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include' // ensure HTTP-only cookie is sent so booking service can verify session
       });
 
       if (!response.ok) {
@@ -440,8 +471,43 @@ function App() {
   return (
     <div className="App" role="main">
       {/* Header with semantic HTML for accessibility */}
-      <header role="banner">
+      <header role="banner" style={{ position: 'relative' }}>
         <h1>Clemson Campus Events</h1>
+
+        {/* AUTH BUTTONS (top-right) */}
+        <div style={{
+          position: 'absolute',
+          right: 16,
+          top: 12,
+          display: 'flex',
+          gap: 8,
+          alignItems: 'center'
+        }}>
+          {!user ? (
+            <>
+              <button onClick={() => setShowLogin(true)} aria-label="Open login">Login</button>
+              <button onClick={() => setShowRegister(true)} aria-label="Open register">Register</button>
+            </>
+          ) : (
+            <>
+              <span style={{ marginRight: 8 }}>Logged in as {user.email}</span>
+              <button onClick={async () => {
+                // call logout endpoint to clear cookie
+                try {
+                  await fetch('http://localhost:4002/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                  });
+                } catch (e) {
+                  console.error('logout error', e);
+                }
+                setUser(null);
+              }} aria-label="Logout">
+                Logout
+              </button>
+            </>
+          )}
+        </div>
       </header>
       
       {/* Status messages for screen readers */}
@@ -661,6 +727,93 @@ function App() {
           </div>
         )}
       </div>
+
+      {/* LOGIN MODAL */}
+      {showLogin && (
+        <div className="auth-modal-overlay">
+          <div className="auth-modal" role="dialog" aria-labelledby="login-title">
+            <h3 id="login-title">Login</h3>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              const form = new FormData(e.target);
+              const body = {
+                email: form.get('email'),
+                password: form.get('password')
+              };
+              try {
+                const res = await fetch('http://localhost:4002/auth/login', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(body),
+                  credentials: 'include' // important to receive HTTP-only cookie
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                  alert(data.error || 'Login failed');
+                  return;
+                }
+                // fetch current user
+                const me = await fetch('http://localhost:4002/auth/me', { credentials: 'include' });
+                if (me.ok) {
+                  const meJson = await me.json();
+                  setUser({ id: meJson.id, email: meJson.email });
+                }
+                setShowLogin(false);
+                // auto-logout after 30 minutes (frontend state)
+                setTimeout(() => setUser(null), 30 * 60 * 1000);
+              } catch (err) {
+                console.error('login error', err);
+                alert('Network error during login');
+              }
+            }}>
+              <input name="email" type="email" placeholder="Email" required />
+              <input name="password" type="password" placeholder="Password" required />
+              <button type="submit">Login</button>
+            </form>
+            <button onClick={() => setShowLogin(false)}>Close</button>
+          </div>
+        </div>
+      )}
+
+      {/* REGISTER MODAL */}
+      {showRegister && (
+        <div className="auth-modal-overlay">
+          <div className="auth-modal" role="dialog" aria-labelledby="register-title">
+            <h3 id="register-title">Create an Account</h3>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              const form = new FormData(e.target);
+              const body = {
+                email: form.get('email'),
+                password: form.get('password')
+              };
+              try {
+                const res = await fetch('http://localhost:4002/auth/register', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                  alert(data.error || 'Registration failed');
+                  return;
+                }
+                alert('Registration successful — please log in.');
+                setShowRegister(false);
+              } catch (err) {
+                console.error('register error', err);
+                alert('Network error during registration');
+              }
+            }}>
+              <input name="email" type="email" placeholder="Email" required />
+              <input name="password" type="password" placeholder="Password" required />
+              <button type="submit">Register</button>
+            </form>
+            <button onClick={() => setShowRegister(false)}>Close</button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
