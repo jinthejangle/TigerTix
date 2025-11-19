@@ -246,3 +246,17 @@ describe('Integration Tests', () => {
         );
     })
 })
+
+describe('Authentication Test', () => {
+    beforeAll(async () => {
+        await page.goto('http://localhost:3000/');
+    })
+    test('Tests functionality of user authentication', async () => {
+        await page.getByRole('button', {name: 'Login'}).click();
+        await expect(page.locator('#login-title')).toHaveText('Login');
+        await page.fill('#email', 'example@clemson.edu');
+        await page.fill('#password', 'example');
+        await page.click('button[type="submit"]');
+        await expect(page.locator('#flash')).toHaveText('Logged in as example@clemson.edu');
+    })
+})

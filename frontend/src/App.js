@@ -70,7 +70,6 @@ function App() {
         setIsListening(false);
       };
 
-      let interim = '';
       r.onresult = (event) => {
         let finalTranscript = '';
         let interimTranscript = '';
@@ -490,7 +489,7 @@ function App() {
             </>
           ) : (
             <>
-              <span style={{ marginRight: 8 }}>Logged in as {user.email}</span>
+              <span id="flash" style={{ marginRight: 8 }}>Logged in as {user.email}</span>
               <button onClick={async () => {
                 // call logout endpoint to clear cookie
                 try {
@@ -766,8 +765,8 @@ function App() {
                 alert('Network error during login');
               }
             }}>
-              <input name="email" type="email" placeholder="Email" required />
-              <input name="password" type="password" placeholder="Password" required />
+              <input name="email" type="email" placeholder="Email" id="email" required />
+              <input name="password" type="password" placeholder="Password" id="password" required />
               <button type="submit">Login</button>
             </form>
             <button onClick={() => setShowLogin(false)}>Close</button>
