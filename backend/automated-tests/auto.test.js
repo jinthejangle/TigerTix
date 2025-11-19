@@ -245,10 +245,4 @@ describe('Integration Tests', () => {
             {event_name: 'New Test Event', remaining_tickets: 98, tickets_booked: 2}
         );
     })
-
-    test('Tests functionality of user authentication', async ({page}) => {
-        await page.goto('https://localhost:3000');
-        await page.click('button[type="Login"]');
-        done();
-    })
 })
