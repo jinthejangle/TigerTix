@@ -524,6 +524,7 @@ function App() {
           className="status-message"
           role="alert"
           aria-live="polite"
+          id="status-message"
         >
           {purchaseStatus}
         </div>
@@ -570,6 +571,7 @@ function App() {
                     <button
                       onClick={() => buyTicket(event.id, event.name)}
                       className="buy-ticket-btn"
+                      id="buy-ticket"
                       disabled={isSoldOut}
                       aria-label={
                         isSoldOut 
@@ -613,6 +615,7 @@ function App() {
               <button 
                 onClick={confirmPurchase}
                 className="confirm-purchase-btn"
+                id="confirm-purchase"
                 aria-label="Confirm ticket purchase"
               >
                 Confirm Purchase

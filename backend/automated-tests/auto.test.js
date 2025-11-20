@@ -247,16 +247,25 @@ describe('Integration Tests', () => {
     })
 })
 
-describe('Authentication Test', () => {
+describe('End-to-End Test', () => {
     beforeAll(async () => {
         await page.goto('http://localhost:3000/');
     })
-    test('Tests functionality of user authentication', async () => {
+
+    afterAll(async () => {
+        await page.close();
+    })
+
+    test('Simulates user authentication and purchasing ticket', async () => {
         await page.getByRole('button', {name: 'Login'}).click();
         await expect(page.locator('#login-title')).toHaveText('Login');
         await page.fill('#email', 'example@clemson.edu');
         await page.fill('#password', 'example');
         await page.click('button[type="submit"]');
         await expect(page.locator('#flash')).toHaveText('Logged in as example@clemson.edu');
+        await page.locator('#buy-ticket.buy-ticket-btn').click();
+        await page.locator('#confirm-purchase.confirm-purchase-btn').click();
+        await page.waitForTimeout(1000);
+        await expect(page.locator('#status-message')).toHaveText('Ticket successfully purchased for: Test Event');
     })
 })
