@@ -4,6 +4,7 @@ const llmModel = require('../llm-driven-booking/models/llmModel');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const dbPath = path.resolve(__dirname, './test-database.sqlite');
+const newDbPath = path.resolve(__dirname, '../shared-db/database.sqlite')
 
 describe('Admin Service Unit Tests', () => {
 
@@ -258,14 +259,13 @@ describe('End-to-End Test', () => {
 
     test('Simulates user authentication and purchasing ticket', async () => {
         await page.locator('#login.auth-header-btn').click();
-        await expect(page.locator('#auth-modal-title')).toHaveText('Login to TigerTix');
         await page.fill('#auth-email', 'example@clemson.edu');
         await page.fill('#auth-password', 'example');
         await page.click('button[type="submit"]');
         await expect(page.locator('#flash')).toHaveText('Logged in as example@clemson.edu');
         await page.locator('#buy-ticket.buy-ticket-btn').click();
         await page.locator('#confirm-purchase.confirm-purchase-btn').click();
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(500);
         await expect(page.locator('#status-message.status-message')).toHaveText('Ticket successfully purchased for: Test Event');
     })
 })

@@ -583,6 +583,7 @@ function App() {
                   setAuthMode("register");
                 }} 
                 className="auth-header-btn"
+                id="register"
                 aria-label="Open register"
               >
                 Register
