@@ -1,4 +1,4 @@
-/**
+/** 
  * React frontend for TigerTix event management system
  * Connects to client microservice for event data and purchases
  * Includes LLM chatbot for natural language ticket booking
@@ -20,10 +20,15 @@ function App() {
   const [showConfirmation, setShowConfirmation] = useState(false);  // Controls confirmation modal visibility
   const [pendingBooking, setPendingBooking] = useState(null);   // Stores details of pending booking for confirmation
   
-  // Authentication state (added — popup modal approach)
+  // Authentication state (updated - single modal approach)
   const [user, setUser] = useState(null);                   // { id, email } when logged in
-  const [showLogin, setShowLogin] = useState(false);
-  const [showRegister, setShowRegister] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState("login"); // "login" or "register"
+
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authConfirmPassword, setAuthConfirmPassword] = useState("");
+  const [authError, setAuthError] = useState("");
 
   // Chatbot state
   const [chatOpen, setChatOpen] = useState(false);          // Controls chat window visibility
@@ -70,6 +75,7 @@ function App() {
         setIsListening(false);
       };
 
+      let interim = '';
       r.onresult = (event) => {
         let finalTranscript = '';
         let interimTranscript = '';
@@ -194,8 +200,16 @@ function App() {
   /**
    * Handle ticket purchase for a specific event
    */
-  const buyTicket = async (eventId, eventName) => {
-    // Store the pending booking and show confirmation
+  const buyTicket = (eventId, eventName) => {
+    // If the user is not logged in, block purchase
+    if (!user) {
+      setPurchaseStatus("You must be logged in to buy tickets.");
+      setShowAuthModal(true);     // Open auth modal
+      setAuthMode("login");       // Default to login tab
+      return;                     // Do NOT continue to confirmation
+    }
+
+    // If the user *is* logged in, allow confirmation modal
     setPendingBooking({ eventId, eventName });
     setShowConfirmation(true);
   };
@@ -438,6 +452,74 @@ function App() {
   };
 
   /**
+   * Handles authentication form submission
+   */
+  const handleAuthSubmit = async (e) => {
+    e.preventDefault();
+    setAuthError("");
+
+    // Validate passwords match for registration
+    if (authMode === "register" && authPassword !== authConfirmPassword) {
+      setAuthError("Passwords do not match");
+      return;
+    }
+
+    try {
+      const endpoint = authMode === "login" ? "login" : "register";
+      const body = authMode === "login" 
+        ? { email: authEmail, password: authPassword }
+        : { email: authEmail, password: authPassword, confirmPassword: authConfirmPassword };
+
+      const res = await fetch(`http://localhost:4002/api/auth/${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        credentials: "include",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setAuthError(data.error || `${authMode === "login" ? "Login" : "Registration"} failed`);
+        return;
+      }
+
+      // Success - set user and close modal
+      setUser({ id: data.id, email: data.email });
+      setShowAuthModal(false);
+      setAuthEmail("");
+      setAuthPassword("");
+      setAuthConfirmPassword("");
+      setAuthError("");
+      
+    } catch (err) {
+      console.error(`${authMode} error:`, err);
+      setAuthError(`${authMode === "login" ? "Login" : "Registration"} failed. Please try again.`);
+    }
+  };
+
+  /**
+   * Reset auth form when switching modes
+   */
+  const switchAuthMode = (mode) => {
+    setAuthMode(mode);
+    setAuthError("");
+    setAuthPassword("");
+    setAuthConfirmPassword("");
+  };
+
+  /**
+   * Close auth modal and reset form
+   */
+  const closeAuthModal = () => {
+    setShowAuthModal(false);
+    setAuthError("");
+    setAuthEmail("");
+    setAuthPassword("");
+    setAuthConfirmPassword("");
+  };
+
+  /**
    * Handles keyboard input in chat
    * @param e event
    */
@@ -484,24 +566,46 @@ function App() {
         }}>
           {!user ? (
             <>
-              <button onClick={() => setShowLogin(true)} aria-label="Open login">Login</button>
-              <button onClick={() => setShowRegister(true)} aria-label="Open register">Register</button>
+              <button 
+                onClick={() => {
+                  setShowAuthModal(true);
+                  setAuthMode("login");
+                }} 
+                className="auth-header-btn"
+                aria-label="Open login"
+              >
+                Login
+              </button>
+              <button 
+                onClick={() => {
+                  setShowAuthModal(true);
+                  setAuthMode("register");
+                }} 
+                className="auth-header-btn"
+                aria-label="Open register"
+              >
+                Register
+              </button>
             </>
           ) : (
             <>
-              <span id="flash" style={{ marginRight: 8 }}>Logged in as {user.email}</span>
-              <button onClick={async () => {
-                // call logout endpoint to clear cookie
-                try {
-                  await fetch('http://localhost:4002/api/auth/logout', {
-                    method: 'POST',
-                    credentials: 'include'
-                  });
-                } catch (e) {
-                  console.error('logout error', e);
-                }
-                setUser(null);
-              }} aria-label="Logout">
+              <span style={{ marginRight: 8, color: '#ffffff' }}>Logged in as {user.email}</span>
+              <button 
+                onClick={async () => {
+                  // call logout endpoint to clear cookie
+                  try {
+                    await fetch('http://localhost:4002/api/auth/logout', {
+                      method: 'POST',
+                      credentials: 'include'
+                    });
+                  } catch (e) {
+                    console.error('logout error', e);
+                  }
+                  setUser(null);
+                }} 
+                className="auth-header-btn"
+                aria-label="Logout"
+              >
                 Logout
               </button>
             </>
@@ -625,6 +729,108 @@ function App() {
         </div>
       )}
 
+      {/* Combined Authentication Modal */}
+      {showAuthModal && (
+        <div className="auth-modal-overlay" onClick={closeAuthModal}>
+          <div 
+            className="auth-modal"
+            role="dialog"
+            aria-labelledby="auth-modal-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="auth-modal-title">
+              {authMode === "login" ? "Login to TigerTix" : "Create an Account"}
+            </h2>
+            
+            {/* Tabs for switching between login/register */}
+            <div className="auth-tabs">
+              <button
+                className={`auth-tab ${authMode === "login" ? "active" : ""}`}
+                onClick={() => switchAuthMode("login")}
+                aria-pressed={authMode === "login"}
+                aria-label="Switch to login form"
+              >
+                Login
+              </button>
+              <button
+                className={`auth-tab ${authMode === "register" ? "active" : ""}`}
+                onClick={() => switchAuthMode("register")}
+                aria-pressed={authMode === "register"}
+                aria-label="Switch to registration form"
+              >
+                Register
+              </button>
+            </div>
+
+            {/* Error message display */}
+            {authError && (
+              <div className="auth-error" role="alert">
+                {authError}
+              </div>
+            )}
+
+            <form onSubmit={handleAuthSubmit}>
+              <div>
+                <label htmlFor="auth-email">Email</label>
+                <input
+                  id="auth-email"
+                  type="email"
+                  value={authEmail}
+                  onChange={(e) => setAuthEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  required
+                  aria-required="true"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="auth-password">Password</label>
+                <input
+                  id="auth-password"
+                  type="password"
+                  value={authPassword}
+                  onChange={(e) => setAuthPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  required
+                  aria-required="true"
+                />
+              </div>
+
+              {authMode === "register" && (
+                <div>
+                  <label htmlFor="auth-confirm-password">Confirm Password</label>
+                  <input
+                    id="auth-confirm-password"
+                    type="password"
+                    value={authConfirmPassword}
+                    onChange={(e) => setAuthConfirmPassword(e.target.value)}
+                    placeholder="Confirm your password"
+                    required
+                    aria-required="true"
+                  />
+                </div>
+              )}
+
+              <button 
+                type="submit" 
+                className="auth-btn"
+                disabled={isProcessing}
+              >
+                {authMode === "login" ? "Login" : "Create Account"}
+              </button>
+            </form>
+
+            <button
+              className="close-auth-btn"
+              onClick={closeAuthModal}
+              aria-label="Close authentication modal"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Chatbot Interface */}
       <div className="chatbot-container">
         {/* Chat toggle button */}
@@ -729,93 +935,6 @@ function App() {
           </div>
         )}
       </div>
-
-      {/* LOGIN MODAL */}
-      {showLogin && (
-        <div className="auth-modal-overlay">
-          <div className="auth-modal" role="dialog" aria-labelledby="login-title">
-            <h3 id="login-title">Login</h3>
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              const form = new FormData(e.target);
-              const body = {
-                email: form.get('email'),
-                password: form.get('password')
-              };
-              try {
-                const res = await fetch('http://localhost:4002/api/auth/login', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(body),
-                  credentials: 'include' // important to receive HTTP-only cookie
-                });
-                const data = await res.json();
-                if (!res.ok) {
-                  alert(data.error || 'Login failed');
-                  return;
-                }
-                // fetch current user
-                const me = await fetch('http://localhost:4002/api/auth/me', { credentials: 'include' });
-                if (me.ok) {
-                  const meJson = await me.json();
-                  setUser({ id: meJson.id, email: meJson.email });
-                }
-                setShowLogin(false);
-                // auto-logout after 30 minutes (frontend state)
-                setTimeout(() => setUser(null), 30 * 60 * 1000);
-              } catch (err) {
-                console.error('login error', err);
-                alert('Network error during login');
-              }
-            }}>
-              <input name="email" type="email" placeholder="Email" id="email" required />
-              <input name="password" type="password" placeholder="Password" id="password" required />
-              <button type="submit">Login</button>
-            </form>
-            <button onClick={() => setShowLogin(false)}>Close</button>
-          </div>
-        </div>
-      )}
-
-      {/* REGISTER MODAL */}
-      {showRegister && (
-        <div className="auth-modal-overlay">
-          <div className="auth-modal" role="dialog" aria-labelledby="register-title">
-            <h3 id="register-title">Create an Account</h3>
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              const form = new FormData(e.target);
-              const body = {
-                email: form.get('email'),
-                password: form.get('password')
-              };
-              try {
-                const res = await fetch('http://localhost:4002/api/auth/register', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(body)
-                });
-                const data = await res.json();
-                if (!res.ok) {
-                  alert(data.error || 'Registration failed');
-                  return;
-                }
-                alert('Registration successful — please log in.');
-                setShowRegister(false);
-              } catch (err) {
-                console.error('register error', err);
-                alert('Network error during registration');
-              }
-            }}>
-              <input name="email" type="email" placeholder="Email" required />
-              <input name="password" type="password" placeholder="Password" required />
-              <button type="submit">Register</button>
-            </form>
-            <button onClick={() => setShowRegister(false)}>Close</button>
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }

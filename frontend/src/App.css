@@ -430,3 +430,159 @@ a:focus {
 .confirm-purchase-btn:hover {
   background: #f5a062;
 }
+
+/* Authentication */
+.auth-header-btn {
+  background-color: #F56600;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.auth-header-btn:hover {
+  background-color: #f5a062;
+}
+
+/* Combined Authentication Modal Styles */
+.auth-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 3000;
+}
+
+.auth-modal {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  color: #3D215E;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  border: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: popIn 0.25s ease-out;
+}
+
+.auth-modal h2 {
+  margin: 0;
+  font-size: 24px;
+  color: #522D80;
+  font-weight: bold;
+}
+
+.auth-modal label {
+  color: #522D80;
+  font-weight: bold;
+  text-align: left;
+  margin-bottom: 5px;
+  display: block;
+  font-size: 14px;
+}
+
+.auth-modal input {
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  width: 100%;
+  font-size: 15px;
+  box-sizing: border-box;
+  margin-bottom: 15px;
+}
+
+.auth-modal input:focus {
+  outline: none;
+  border-color: #522d80;
+  box-shadow: 0 0 4px rgba(82,45,128,0.4);
+}
+
+.auth-btn {
+  background: #F56600;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  width: 100%;
+  font-size: 16px;
+}
+
+.auth-btn:hover:not(:disabled) {
+  background: #f5a062;
+}
+
+.auth-btn:disabled {
+  background: #d6bca9;
+  cursor: not-allowed;
+}
+
+.close-auth-btn {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  width: 100%;
+}
+
+.close-auth-btn:hover {
+  background: #5a6268;
+}
+
+/* Tabs inside auth modal */
+.auth-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.auth-tab {
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  border: none;
+  background: #e8e0f2;
+  color: #3D215E;
+  transition: 0.2s;
+  flex: 1;
+}
+
+.auth-tab:hover {
+  background: #d8c6ee;
+}
+
+.auth-tab.active {
+  background: #522D80;
+  color: white;
+}
+
+/* Error text for auth failures */
+.auth-error {
+  color: #F56600;
+  font-weight: bold;
+  font-size: 14px;
+  background: rgba(245, 102, 0, 0.1);
+  padding: 8px 12px;
+  border-radius: 4px;
+  border-left: 3px solid #F56600;
+}
+
+/* Pop-in animation */
+@keyframes popIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
