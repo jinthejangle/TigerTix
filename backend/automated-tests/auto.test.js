@@ -265,7 +265,7 @@ describe('End-to-End Test', () => {
         await expect(page.locator('#flash')).toHaveText('Logged in as example@clemson.edu');
         await page.locator('#buy-ticket.buy-ticket-btn').click();
         await page.locator('#confirm-purchase.confirm-purchase-btn').click();
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(500);
         await expect(page.locator('#status-message')).toHaveText('Ticket successfully purchased for: Test Event');
     })
 })
