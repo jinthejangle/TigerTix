@@ -572,6 +572,7 @@ function App() {
                   setAuthMode("login");
                 }} 
                 className="auth-header-btn"
+                id="login"
                 aria-label="Open login"
               >
                 Login
@@ -589,7 +590,7 @@ function App() {
             </>
           ) : (
             <>
-              <span style={{ marginRight: 8, color: '#ffffff' }}>Logged in as {user.email}</span>
+              <span id="flash" style={{ marginRight: 8, color: '#ffffff' }}>Logged in as {user.email}</span>
               <button 
                 onClick={async () => {
                   // call logout endpoint to clear cookie
