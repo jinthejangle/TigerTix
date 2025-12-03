@@ -17,7 +17,8 @@ app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
     ? "https://tiger-tix-gilt.vercel.app"
     : "http://localhost:3000",
-  credentials: true
+  credentials: true,
+  exposedHeaders: ['Set-Cookie']
 }));
 
 app.use('/api/auth', authRoutes);

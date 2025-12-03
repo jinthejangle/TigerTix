@@ -45,6 +45,7 @@ async function login(req, res) {
       secure: process.env.NODE_ENV === 'production', // true on Render (HTTPS)
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: TOKEN_TTL_SECONDS * 1000,
+      domain: '.vercel.app'
     });
 
     // return user info (no token in body; cookie holds it)
