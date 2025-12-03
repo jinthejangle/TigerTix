@@ -70,11 +70,6 @@ const purchaseTicket = async (req, res) => {
     }
 };
 
-module.exports = {
-    listEvents,
-    purchaseTicket
-};
-
 const verifyToken = (req, res, next) => {
   const token = (req.cookies && req.cookies[COOKIE_NAME]) || 
                 (req.headers.authorization || '').replace(/^Bearer\s+/, '');
@@ -90,4 +85,10 @@ const verifyToken = (req, res, next) => {
     req.user = payload; // { id, email }
     next();
   });
+};
+
+module.exports = {
+    listEvents,
+    purchaseTicket,
+    verifyToken
 };
