@@ -10,11 +10,11 @@ const app = express();
 const routes = require('./routes/clientRoutes');
 
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: ["http://localhost:3000", "https://tigertix-client-service-jje5.onrender.com"],
   credentials: true
 }));
 app.use(express.json());
 app.use('/api', routes);
 
-const PORT = 6001;
-app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));
+const PORT = process.env.PORT || 6001;
+app.listen(PORT, () => console.log(`Server running on ${PORT}`));

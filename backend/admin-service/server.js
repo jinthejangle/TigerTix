@@ -13,5 +13,5 @@ app.use(cors());
 app.use(express.json());    // Parse JSON input
 app.use('/api/admin', routes);
 
-const PORT = 5001;
-app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));
+const PORT = process.env.PORT || 5001;
+app.listen(PORT, () => console.log(`Server running on ${PORT}`));

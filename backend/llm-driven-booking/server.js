@@ -12,9 +12,9 @@ app.use(cors());
 app.use(express.json());
 app.use('/api/llm', routes);
 
-const PORT = 7001;
+const PORT = process.env.PORT || 7001;
 app.listen(PORT, () => {
-  console.log(`LLM Service running at http://localhost:${PORT}`);
+  console.log(`LLM Service running on ${PORT}`);
   console.log('Endpoints:');
   console.log('  POST /api/llm/parse - Parse natural language requests');
   console.log('  POST /api/llm/confirm-booking - Confirm and process bookings');

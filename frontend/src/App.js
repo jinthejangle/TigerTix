@@ -167,7 +167,7 @@ function App() {
       })
       .catch((err) => {
         console.error('Error loading events:', err);
-        setPurchaseStatus('Failed to load events. Please make sure the server is running on port 6001.');
+        setPurchaseStatus('Failed to load events. Please check your network or backend URL.');
       })
       .finally(() => setLoading(false));
   }, []);
