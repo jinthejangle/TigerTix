@@ -49,5 +49,14 @@ module.exports = {
         resolve(row);
       });
     });
+  },
+
+  removeUser: (email) => {
+    return new Promise((resolve, reject) => {
+      db.run(`DELETE FROM users WHERE email = ?`, [email], (err,row) => {
+        if (err) return reject(err);
+        resolve(row);
+      });
+    });
   }
 };
