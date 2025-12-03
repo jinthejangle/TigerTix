@@ -10,7 +10,7 @@ const app = express();
 const routes = require('./routes/clientRoutes');
 
 app.use(cors({
-  origin: ["http://localhost:3000", "tiger-tix-gilt.vercel.app"],
+  origin: ["http://localhost:3000", "http://tiger-tix-gilt.vercel.app"],
   credentials: true
 }));
 app.use(express.json());
