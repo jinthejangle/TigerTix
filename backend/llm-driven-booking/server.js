@@ -8,7 +8,12 @@ const cors = require('cors');
 const app = express();
 const routes = require('./routes/llmRoutes');
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    "https://tiger-tix-gilt.vercel.app"
+  ],
+  credentials: true
+}));
 app.use(express.json());
 app.use('/api/llm', routes);
 
