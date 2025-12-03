@@ -154,7 +154,7 @@ function App() {
   useEffect(() => {
     setLoading(true);
     
-    fetch('http://localhost:6001/api/events')
+    fetch(`${process.env.REACT_APP_CLIENT_URL}/api/events`)
       .then((res) => {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -179,7 +179,7 @@ function App() {
   useEffect(() => {
     const fetchMe = async () => {
       try {
-        const res = await fetch('http://localhost:4002/api/auth/me', {
+        const res = await fetch(`${process.env.REACT_APP_AUTH_URL}/api/auth/me`, {
           method: 'GET',
           credentials: 'include' // send HTTP-only cookie
         });
@@ -237,7 +237,7 @@ function App() {
         )
       );
       
-      const response = await fetch(`http://localhost:6001/api/events/${eventId}/purchase`, {
+      const response = await fetch(`${process.env.REACT_APP_CLIENT_URL}/api/events/${eventId}/purchase`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -330,7 +330,7 @@ function App() {
     setIsProcessing(true);
 
     try {
-      const response = await fetch('http://localhost:7001/api/llm/parse', {
+      const response = await fetch(`${process.env.REACT_APP_LLM_URL}/api/llm/parse`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -394,7 +394,7 @@ function App() {
     setIsProcessing(true);
     
     try {
-      const response = await fetch('http://localhost:7001/api/llm/confirm-booking', {
+      const response = await fetch(`${process.env.REACT_APP_LLM_URL}/api/llm/confirm-booking`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -423,7 +423,7 @@ function App() {
       speakText(confirmationMessage.text);
 
       // Refresh events to update ticket counts
-      const eventsResponse = await fetch('http://localhost:6001/api/events');
+      const eventsResponse = await fetch(`${process.env.REACT_APP_CLIENT_URL}/api/events`);
       if (eventsResponse.ok) {
         const eventsData = await eventsResponse.json();
         setEvents(eventsData);
@@ -470,7 +470,7 @@ function App() {
         ? { email: authEmail, password: authPassword }
         : { email: authEmail, password: authPassword, confirmPassword: authConfirmPassword };
 
-      const res = await fetch(`http://localhost:4002/api/auth/${endpoint}`, {
+      const res = await fetch(`${process.env.REACT_APP_AUTH_URL}/api/auth/${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -596,7 +596,7 @@ function App() {
                 onClick={async () => {
                   // call logout endpoint to clear cookie
                   try {
-                    await fetch('http://localhost:4002/api/auth/logout', {
+                    await fetch(`${process.env.REACT_APP_AUTH_URL}/api/auth/logout`, {
                       method: 'POST',
                       credentials: 'include'
                     });
