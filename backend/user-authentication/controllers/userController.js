@@ -39,14 +39,20 @@ async function login(req, res) {
     const payload = { id: user.id, email: user.email };
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: TOKEN_TTL_SECONDS + 's' });
 
-    // Set HTTP-only cookie
-    res.cookie(COOKIE_NAME, token, {
+    const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // true on Render (HTTPS)
+      secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: TOKEN_TTL_SECONDS * 1000,
-      domain: '.vercel.app'
-    });
+      maxAge: TOKEN_TTL_SECONDS * 1000
+    };
+
+    // Optional domain override (used ONLY if you provide COOKIE_DOMAIN)
+    if (process.env.COOKIE_DOMAIN) {
+      cookieOptions.domain = process.env.COOKIE_DOMAIN;
+    }
+
+    // Set cookie without hard-coded domain
+    res.cookie(COOKIE_NAME, token, cookieOptions);
 
     // return user info (no token in body; cookie holds it)
     res.json({ id: user.id, email: user.email, expiresIn: TOKEN_TTL_SECONDS });
