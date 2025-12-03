@@ -41,7 +41,8 @@ const getAllEvents = (db = baseDb) => {
  * @returns {Promise<Object>} Updated event object with new ticket count
  * @throws {Error} When event not found, no tickets available, or database error
  */
-const purchaseTicket = (eventId, db = baseDb) => {
+// Update the function signature to accept userId
+const purchaseTicket = (eventId, userId, db = baseDb) => {
     return new Promise((resolve, reject) => {
         
         // Use a transaction to ensure atomic updates
@@ -54,14 +55,18 @@ const purchaseTicket = (eventId, db = baseDb) => {
                 if (err) {
                     console.error('Error checking ticket count:', err);
                     db.run('ROLLBACK');
-                    db.close();
                     reject(err);
+                    return;
+                }
+                
+                if (!row) {
+                    db.run('ROLLBACK');
+                    reject(new Error('Event not found'));
                     return;
                 }
                 
                 if (row.ticket_count <= 0) {
                     db.run('ROLLBACK');
-                    db.close();
                     reject(new Error('No tickets available'));
                     return;
                 }
@@ -74,33 +79,60 @@ const purchaseTicket = (eventId, db = baseDb) => {
                         if (err) {
                             console.error('Error updating ticket count:', err);
                             db.run('ROLLBACK');
-                            db.close();
                             reject(err);
                             return;
                         }
                         
-                        // Get updated event data
-                        db.get('SELECT id, name, date, ticket_count FROM events WHERE id = ?', [eventId], (err, updatedEvent) => {
+                        // OPTIONAL: Record purchase in purchases table
+                        // Create purchases table if it doesn't exist
+                        db.run(`
+                            CREATE TABLE IF NOT EXISTS purchases (
+                                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                event_id INTEGER NOT NULL,
+                                user_id INTEGER NOT NULL,
+                                purchased_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                            )
+                        `, (err) => {
                             if (err) {
-                                console.error('Error fetching updated event:', err);
                                 db.run('ROLLBACK');
-                                db.close();
                                 reject(err);
                                 return;
                             }
                             
-                            // Commit transaction
-                            db.run('COMMIT', (err) => {
-                                if (err) {
-                                    console.error('Error committing transaction:', err);
-                                    db.close();
-                                    reject(err);
-                                    return;
+                            // Insert purchase record
+                            db.run(
+                                'INSERT INTO purchases (event_id, user_id) VALUES (?, ?)',
+                                [eventId, userId],
+                                function(err) {
+                                    if (err) {
+                                        db.run('ROLLBACK');
+                                        reject(err);
+                                        return;
+                                    }
+                                    
+                                    // Get updated event data
+                                    db.get('SELECT id, name, date, ticket_count FROM events WHERE id = ?', [eventId], (err, updatedEvent) => {
+                                        if (err) {
+                                            console.error('Error fetching updated event:', err);
+                                            db.run('ROLLBACK');
+                                            reject(err);
+                                            return;
+                                        }
+                                        
+                                        // Commit transaction
+                                        db.run('COMMIT', (err) => {
+                                            if (err) {
+                                                console.error('Error committing transaction:', err);
+                                                reject(err);
+                                                return;
+                                            }
+                                            
+                                            console.log(`Ticket purchased for event ${eventId} by user ${userId}`);
+                                            resolve(updatedEvent);
+                                        });
+                                    });
                                 }
-                                
-                                console.log('Ticket purchased for event', eventId);
-                                resolve(updatedEvent);
-                            });
+                            );
                         });
                     }
                 );

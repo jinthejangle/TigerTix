@@ -42,8 +42,8 @@ async function login(req, res) {
     // Set HTTP-only cookie
     res.cookie(COOKIE_NAME, token, {
       httpOnly: true,
-      // secure: true, // enable when using HTTPS in production
-      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production', // true on Render (HTTPS)
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: TOKEN_TTL_SECONDS * 1000,
     });
 
@@ -57,7 +57,11 @@ async function login(req, res) {
 
 // Logout
 function logout(req, res) {
-  res.clearCookie(COOKIE_NAME, { httpOnly: true, sameSite: 'lax' });
+  res.clearCookie(COOKIE_NAME, { 
+    httpOnly: true, 
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+  });
   res.json({ ok: true });
 }
 

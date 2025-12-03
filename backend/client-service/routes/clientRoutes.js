@@ -5,8 +5,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { verifyToken } = require("../../user-authentication/controllers/userController");
-const { listEvents, purchaseTicket } = require('../controllers/clientController');
+const { verifyToken, listEvents, purchaseTicket } = require('../controllers/clientController');
 
 router.get('/events', listEvents);
 

@@ -14,7 +14,9 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use(cors({
-  origin: process.env.FRONTEND_ORIGIN || "http://localhost:4002",
+  origin: process.env.NODE_ENV === 'production' 
+    ? "https://tiger-tix-gilt.vercel.app"
+    : "http://localhost:3000",
   credentials: true
 }));
 
