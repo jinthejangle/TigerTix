@@ -39,17 +39,38 @@ async function login(req, res) {
     const payload = { id: user.id, email: user.email };
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: TOKEN_TTL_SECONDS + 's' });
 
+    // Debug logging
+    console.log('Login successful for:', email);
+    console.log('Setting cookie with name:', COOKIE_NAME);
+    console.log('NODE_ENV:', process.env.NODE_ENV);
+    console.log('secure setting:', process.env.NODE_ENV === 'production');
+    console.log('sameSite setting:', process.env.NODE_ENV === 'production' ? 'none' : 'lax');
+
     // Set HTTP-only cookie
-    res.cookie(COOKIE_NAME, token, {
+    const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // true on Render (HTTPS)
+      secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: TOKEN_TTL_SECONDS * 1000,
-      domain: '.vercel.app'
-    });
+    };
+    
+    // Add domain if needed for cross-subdomain
+    if (process.env.NODE_ENV === 'production' && process.env.COOKIE_DOMAIN) {
+      cookieOptions.domain = process.env.COOKIE_DOMAIN;
+    }
+    
+    res.cookie(COOKIE_NAME, token, cookieOptions);
 
     // return user info (no token in body; cookie holds it)
-    res.json({ id: user.id, email: user.email, expiresIn: TOKEN_TTL_SECONDS });
+    res.json({ 
+      id: user.id, 
+      email: user.email, 
+      expiresIn: TOKEN_TTL_SECONDS,
+      debug: {
+        cookieSet: true,
+        options: cookieOptions
+      }
+    });
   } catch (err) {
     console.error('login error:', err);
     res.status(500).json({ error: 'internal server error' });
@@ -94,13 +115,36 @@ async function getCurrentUser(req, res) {
   }
 }
 
+// Add to userController.js:
+async function debugCookies(req, res) {
+  console.log('=== DEBUG COOKIES ===');
+  console.log('Cookies received:', req.cookies);
+  console.log('Headers:', {
+    origin: req.headers.origin,
+    cookie: req.headers.cookie,
+    'user-agent': req.headers['user-agent']
+  });
+  console.log('NODE_ENV:', process.env.NODE_ENV);
+  
+  res.json({
+    cookies: req.cookies,
+    headers: {
+      origin: req.headers.origin,
+      hasCookieHeader: !!req.headers.cookie
+    },
+    hasToken: !!req.cookies[COOKIE_NAME],
+    COOKIE_NAME: COOKIE_NAME
+  });
+}
+
+// Add to exports:
 module.exports = {
   register,
   login,
   logout,
   verifyToken,
   getCurrentUser,
-  // exported for reuse by other services:
+  debugCookies,  // Add this
   _internal: {
     COOKIE_NAME,
     JWT_SECRET,

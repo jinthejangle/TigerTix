@@ -530,6 +530,56 @@ function App() {
     }
   };
 
+  const testCookieFlow = async () => {
+  console.log('=== Testing Cookie Flow ===');
+  
+  // 1. Test if we can reach auth service
+  try {
+    const debugRes = await fetch(`${process.env.REACT_APP_AUTH_URL}/api/auth/debug-cookies`, {
+      credentials: 'include'
+    });
+    const debugData = await debugRes.json();
+    console.log('Debug cookies result:', debugData);
+  } catch (err) {
+    console.error('Debug cookies failed:', err);
+  }
+  
+  // 2. Test login
+  if (!user) {
+    console.log('Not logged in - testing login...');
+    const loginRes = await fetch(`${process.env.REACT_APP_AUTH_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: 'test@test.com', // use a test account
+        password: 'password123'
+      }),
+      credentials: 'include'
+    });
+    const loginData = await loginRes.json();
+    console.log('Login result:', loginData);
+    
+    if (loginRes.ok) {
+      // 3. Test if cookie is set by checking /me
+      const meRes = await fetch(`${process.env.REACT_APP_AUTH_URL}/api/auth/me`, {
+        credentials: 'include'
+      });
+      const meData = await meRes.json();
+      console.log('/me result:', meData);
+    }
+  }
+  
+  // 4. Test client service
+  try {
+    const eventsRes = await fetch(`${process.env.REACT_APP_CLIENT_URL}/api/events`, {
+      credentials: 'include'
+    });
+    console.log('Events fetch status:', eventsRes.status);
+  } catch (err) {
+    console.error('Events fetch failed:', err);
+  }
+};
+
   /**
    * Loading state UI
    */
