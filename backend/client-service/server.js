@@ -13,7 +13,7 @@ const app = express();
 app.use(cors({
   origin: [
     "http://localhost:3000",
-    "tiger-tix-git-debugging-jins-projects-5df56599.vercel.app"
+    "https://tiger-tix-gilt.vercel.app"
   ],
   credentials: true
 }));
