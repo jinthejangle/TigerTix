@@ -10,7 +10,7 @@ const routes = require('./routes/llmRoutes');
 
 app.use(cors({
   origin: "https://tiger-tix-gilt.vercel.app",
-  credentials: true,
+  credentials: false,
   exposedHeaders: ['Set-Cookie']
 }));
 

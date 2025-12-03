@@ -3,7 +3,6 @@
  */
 
 const express = require('express');
-const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const authRoutes = require('./routes/userRoutes');
 
@@ -11,12 +10,11 @@ const app = express();
 const PORT = process.env.PORT || 4002;
 
 app.use(express.json());
-app.use(cookieParser());
+// Remove cookie-parser since we're not using cookies
 
 app.use(cors({
   origin: "https://tiger-tix-gilt.vercel.app",
-  credentials: true,
-  exposedHeaders: ['Set-Cookie']
+  credentials: false // No credentials needed for token-based auth
 }));
 
 app.use('/api/auth', authRoutes);
