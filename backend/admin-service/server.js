@@ -11,7 +11,7 @@ const routes = require('./routes/adminRoutes');
 
 app.use(cors({
   origin: [
-    "https://tiger-tix-gilt.vercel.app"
+    "tiger-tix-git-debugging-jins-projects-5df56599.vercel.app"
   ],
   credentials: true
 }));

@@ -15,7 +15,7 @@ app.use(cookieParser());
 
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? "https://tiger-tix-gilt.vercel.app"
+    ? "tiger-tix-git-debugging-jins-projects-5df56599.vercel.app"
     : "http://localhost:3000",
   credentials: true,
   exposedHeaders: ['Set-Cookie']
