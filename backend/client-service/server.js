@@ -1,7 +1,5 @@
 /**
  * Client microservice server for TigerTix
- * Handles event browsing and ticket purchases
- * Connects to app frontend and shared SQLite database
  */
 
 const express = require('express');
@@ -11,11 +9,8 @@ const routes = require('./routes/clientRoutes');
 const app = express();
 
 app.use(cors({
-  origin: [
-    "http://localhost:3000",
-    "https://tiger-tix-gilt.vercel.app"
-  ],
-  credentials: true
+  origin: "https://tiger-tix-gilt.vercel.app",
+  credentials: false // No cookies needed
 }));
 
 app.use(express.json());

@@ -42,6 +42,25 @@ function App() {
   const recognitionRef = React.useRef(null);
   const abortRef = React.useRef(null); // track abort for cleanup
   
+  // Helper function for authenticated requests - MOVE THIS TO THE TOP
+  const authFetch = async (url, options = {}) => {
+    const token = localStorage.getItem('tiger_token');
+    
+    const headers = {
+      'Content-Type': 'application/json',
+      ...options.headers
+    };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    return fetch(url, {
+      ...options,
+      headers
+    });
+  };
+  
   // short 200ms A4 tone using Web Audio API
   function beep() {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -179,12 +198,10 @@ function App() {
   useEffect(() => {
     const fetchMe = async () => {
       try {
-        const res = await fetch(`${process.env.REACT_APP_AUTH_URL}/api/auth/me`, {
-          method: 'GET',
-          credentials: 'include' // send HTTP-only cookie
-        });
+        const res = await authFetch(`${process.env.REACT_APP_AUTH_URL}/api/auth/me`);
         if (!res.ok) {
           setUser(null);
+          localStorage.removeItem('tiger_token'); // Clear invalid token
           return;
         }
         const data = await res.json();
@@ -192,9 +209,14 @@ function App() {
       } catch (err) {
         console.error('fetchMe error', err);
         setUser(null);
+        localStorage.removeItem('tiger_token');
       }
     };
-    fetchMe();
+    
+    const token = localStorage.getItem('tiger_token');
+    if (token) {
+      fetchMe();
+    }
   }, []);
 
   /**
@@ -224,25 +246,22 @@ function App() {
       setPurchaseStatus(`Processing ticket purchase for ${eventName}...`);
       setShowConfirmation(false);
       
-      // Optimistically update the UI immediately
+      // Optimistically update UI
       setEvents(prevEvents => 
         prevEvents.map(event => 
           event.id === eventId 
             ? { 
                 ...event,
-                // Decrease ticket count immediately
                 ticket_count: Math.max(0, event.ticket_count - 1)
               }
             : event
         )
       );
       
-      const response = await fetch(`${process.env.REACT_APP_CLIENT_URL}/api/events/${eventId}/purchase`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include' // ensure HTTP-only cookie is sent so booking service can verify session
+      // Use authFetch instead of fetch
+      const response = await authFetch(`${process.env.REACT_APP_CLIENT_URL}/api/events/${eventId}/purchase`, {
+        method: 'POST'
+        // Authorization header added by authFetch
       });
 
       if (!response.ok) {
@@ -252,7 +271,7 @@ function App() {
 
       const result = await response.json();
       
-      // Update with server data (no visual change since we already updated)
+      // Update with server data
       setEvents(prevEvents => 
         prevEvents.map(event => 
           event.id === eventId 
@@ -269,13 +288,12 @@ function App() {
     } catch (err) {
       console.error('Error purchasing ticket:', err);
       
-      // Revert the optimistic update on error
+      // Revert optimistic update
       setEvents(prevEvents => 
         prevEvents.map(event => 
           event.id === eventId 
             ? { 
                 ...event,
-                // Restore original ticket count
                 ticket_count: event.ticket_count + 1
               }
             : event
@@ -468,13 +486,13 @@ function App() {
       const endpoint = authMode === "login" ? "login" : "register";
       const body = authMode === "login" 
         ? { email: authEmail, password: authPassword }
-        : { email: authEmail, password: authPassword, confirmPassword: authConfirmPassword };
+        : { email: authEmail, password: authPassword };
 
       const res = await fetch(`${process.env.REACT_APP_AUTH_URL}/api/auth/${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
-        credentials: "include",
+        // NO credentials: 'include'
       });
 
       const data = await res.json();
@@ -484,9 +502,15 @@ function App() {
         return;
       }
 
+      // STORE THE TOKEN
+      if (data.token) {
+        localStorage.setItem('tiger_token', data.token);
+      }
+
       // Success - set user and close modal
       setUser({ id: data.id, email: data.email });
       setShowAuthModal(false);
+      // ADD FORM RESET:
       setAuthEmail("");
       setAuthPassword("");
       setAuthConfirmPassword("");
@@ -529,6 +553,14 @@ function App() {
       sendMessage();
     }
   };
+
+  // REMOVE OR COMMENT OUT THE OLD testCookieFlow FUNCTION:
+  /*
+  const testCookieFlow = async () => {
+    console.log('=== Testing Cookie Flow ===');
+    // ... old cookie test code ...
+  };
+  */
 
   /**
    * Loading state UI
@@ -593,16 +625,9 @@ function App() {
             <>
               <span id="flash" style={{ marginRight: 8, color: '#ffffff' }}>Logged in as {user.email}</span>
               <button 
-                onClick={async () => {
-                  // call logout endpoint to clear cookie
-                  try {
-                    await fetch(`${process.env.REACT_APP_AUTH_URL}/api/auth/logout`, {
-                      method: 'POST',
-                      credentials: 'include'
-                    });
-                  } catch (e) {
-                    console.error('logout error', e);
-                  }
+                onClick={() => {
+                  // Clear token from localStorage
+                  localStorage.removeItem('tiger_token');
                   setUser(null);
                 }} 
                 className="auth-header-btn"

@@ -5,9 +5,9 @@ const { register, login, logout, verifyToken, getCurrentUser } = require('../con
 // Public
 router.post('/register', register);
 router.post('/login', login);
+router.post('/logout', logout); // Changed to POST
 
 // Protected
 router.get('/me', verifyToken, getCurrentUser);
-router.post('/logout', logout);
 
 module.exports = router;

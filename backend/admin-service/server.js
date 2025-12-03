@@ -10,11 +10,11 @@ const app = express();
 const routes = require('./routes/adminRoutes');
 
 app.use(cors({
-  origin: [
-    "https://tiger-tix-gilt.vercel.app"
-  ],
-  credentials: true
+  origin: "https://tiger-tix-gilt.vercel.app",
+  credentials: false,
+  exposedHeaders: ['Set-Cookie']
 }));
+
 app.use(express.json());    // Parse JSON input
 app.use('/api/admin', routes);
 

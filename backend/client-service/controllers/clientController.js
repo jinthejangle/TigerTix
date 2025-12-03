@@ -4,17 +4,32 @@
  */
 
 const clientModel = require('../models/clientModel');
-
-// local verify-token needed now because backend and frontend are separate deployments
 const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_jwt_secret_change_me';
-const COOKIE_NAME = 'tiger_token';
+
+/**
+ * Middleware to verify JWT token from Authorization header
+ */
+const verifyToken = (req, res, next) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace(/^Bearer\s+/, '');
+  
+  if (!token) {
+    return res.status(401).json({ error: 'No token provided. Please log in.' });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, payload) => {
+    if (err) {
+      return res.status(401).json({ error: 'Invalid or expired token' });
+    }
+    req.user = payload; // { id, email }
+    next();
+  });
+};
 
 /**
  * Lists all events
- * @param {Object} req Express request object
- * @param {Object} res Express response object
  */
 const listEvents = async (req, res) => {
     try {
@@ -30,8 +45,6 @@ const listEvents = async (req, res) => {
 
 /**
  * Purchase a ticket for an event
- * @param {Object} req Express request object
- * @param {Object} res Express response object
  */
 const purchaseTicket = async (req, res) => {
     try {
@@ -44,7 +57,6 @@ const purchaseTicket = async (req, res) => {
             });
         }
         
-        // Pass userId to your model if you want to track who purchased
         const updatedEvent = await clientModel.purchaseTicket(eventId, userId);
         
         res.json({
@@ -68,23 +80,6 @@ const purchaseTicket = async (req, res) => {
             error: 'Internal server error: ' + error.message
         });
     }
-};
-
-const verifyToken = (req, res, next) => {
-  const token = (req.cookies && req.cookies[COOKIE_NAME]) || 
-                (req.headers.authorization || '').replace(/^Bearer\s+/, '');
-  
-  if (!token) {
-    return res.status(401).json({ error: 'No token provided. Please log in.' });
-  }
-
-  jwt.verify(token, JWT_SECRET, (err, payload) => {
-    if (err) {
-      return res.status(401).json({ error: 'Invalid or expired token' });
-    }
-    req.user = payload; // { id, email }
-    next();
-  });
 };
 
 module.exports = {
