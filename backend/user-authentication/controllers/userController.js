@@ -42,7 +42,7 @@ async function login(req, res) {
     // Set HTTP-only cookie
     res.cookie(COOKIE_NAME, token, {
       httpOnly: true,
-      // secure: true, // enable when using HTTPS in production
+      secure: true, // enable when using HTTPS in production
       sameSite: 'lax',
       maxAge: TOKEN_TTL_SECONDS * 1000,
     });
