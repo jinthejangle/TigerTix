@@ -34,6 +34,15 @@ const listEvents = async (req, res) => {
  * @param {Object} res Express response object
  */
 const purchaseTicket = async (req, res) => {
+    // In clientController.js purchaseTicket function, add at the beginning:
+    console.log('=== Purchase Request Debug ===');
+    console.log('Cookies:', req.cookies);
+    console.log('Headers:', {
+    authorization: req.headers.authorization,
+    cookie: req.headers.cookie,
+    origin: req.headers.origin
+    });
+console.log('User from verifyToken:', req.user);
     try {
         const eventId = parseInt(req.params.id);
         const userId = req.user.id; // Get user ID from verified token
@@ -75,7 +84,7 @@ const verifyToken = (req, res, next) => {
                 (req.headers.authorization || '').replace(/^Bearer\s+/, '');
   
   if (!token) {
-    return res.status(401).json({ error: 'No token provided. Please log in.' });
+    return res.status(401).json({ error: 'No token provided.' });
   }
 
   jwt.verify(token, JWT_SECRET, (err, payload) => {

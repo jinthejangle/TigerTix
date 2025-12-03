@@ -11,11 +11,9 @@ const routes = require('./routes/clientRoutes');
 const app = express();
 
 app.use(cors({
-  origin: [
-    "http://localhost:3000",
-    "https://tiger-tix-gilt.vercel.app"
-  ],
-  credentials: true
+  origin: "https://tiger-tix-gilt.vercel.app",
+  credentials: true,
+  exposedHeaders: ['Set-Cookie']
 }));
 
 app.use(express.json());
