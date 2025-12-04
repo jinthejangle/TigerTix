@@ -1,15 +1,25 @@
 {
-  "name": "backend-tests",
+  "name": "tigertix-backend-tests",
   "version": "1.0.0",
-  "description": "",
-  "main": "backend.test.js",
+  "description": "Automated tests for TigerTix backend",
+  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --testTimeout=10000",
+    "test:watch": "jest --watch",
+    "test:ci": "jest --testTimeout=10000 --coverage"
   },
-  "keywords": [],
+  "keywords": ["testing", "backend", "microservices"],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@playwright/test": "^1.56.1"
+    "jest": "^29.7.0",
+    "sqlite3": "^5.1.6"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": ["**/*.test.js"],
+    "collectCoverage": false,
+    "testTimeout": 10000,
+    "verbose": true
   }
 }
