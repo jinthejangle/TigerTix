@@ -124,7 +124,9 @@ TigerTix follows a microservice architecture with isolated responsibilities. Eac
 ---
 
 #  How to use regression tests
-
+1. Open a terminal through either VSCode or Ming
+2. Navigate into the backend directory
+3. Run 'npm test' using whichever browser to test
 
 ---
 
