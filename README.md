@@ -114,12 +114,22 @@ TigerTix follows a microservice architecture with isolated responsibilities. Eac
 ---
 
 # Installation & Setup
-
+After cloning the repository:
+1. Run all microservices:
+  - Enter a backend microservice in the terminal (for instance, cd backend/client-service)
+  - Run "node server.js"
+  - Keep this terminal running, and create a new terminal
+  - Repeat steps for each microservice
+2. Run the frontend:
+  - Go into the frontend directory
+  - You might have to run "npm install" first
+  - Run "npm start"
 
 ---
 
 # Environment Variables Setup
-
+After cloning the repository, nothing needs to be done to the Environmental Variables. 
+All secrets and variables are already made. The microservices and the frontend should run without hindrance.
 
 ---
 
