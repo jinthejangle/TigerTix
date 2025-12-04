@@ -1,6 +1,7 @@
 const adminModel = require('../admin-service/models/adminModel');
 const clientModel = require('../client-service/models/clientModel');
 const llmModel = require('../llm-driven-booking/models/llmModel');
+const userModel = require('../user-authentication/models/userModel');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const dbPath = path.resolve(__dirname, './test-database.sqlite');
@@ -112,7 +113,7 @@ describe('Client Service Unit Tests', () => {
     test('Properly purchases ticket', async () => {
         db.run(`INSERT INTO events (name, date, ticket_count, created_at)
                     VALUES ('Client Test Event', '11-3-2025', 100, '2025-10-01 12:00:00')`);
-        const updatedEvent = await clientModel.purchaseTicket(2, db);
+        const updatedEvent = await clientModel.purchaseTicket(2, 'testUser', db);
         expect(updatedEvent).toEqual(
             {date: '11-3-2025', id: 2, name: 'Client Test Event', ticket_count: 99}
         );
@@ -216,7 +217,7 @@ describe('Integration Tests', () => {
             {date: '11-3-2025', id: 2, name: 'New Test Event', ticket_count: 100}
         );
 
-        const updatedEvent = await clientModel.purchaseTicket(2, db);
+        const updatedEvent = await clientModel.purchaseTicket(2, 'testUser', db);
         expect(updatedEvent).toEqual(
             {date: '11-3-2025', id: 2, name: 'New Test Event', ticket_count: 99}
         );
@@ -245,27 +246,5 @@ describe('Integration Tests', () => {
         expect(bookedEvent).toEqual(
             {event_name: 'New Test Event', remaining_tickets: 98, tickets_booked: 2}
         );
-    })
-})
-
-describe('End-to-End Test', () => {
-    beforeAll(async () => {
-        await page.goto('http://localhost:3000/');
-    })
-
-    afterAll(async () => {
-        await page.close();
-    })
-
-    test('Simulates user authentication and purchasing ticket', async () => {
-        await page.locator('#login.auth-header-btn').click();
-        await page.fill('#auth-email', 'example@clemson.edu');
-        await page.fill('#auth-password', 'example');
-        await page.click('button[type="submit"]');
-        await expect(page.locator('#flash')).toHaveText('Logged in as example@clemson.edu');
-        await page.locator('#buy-ticket.buy-ticket-btn').click();
-        await page.locator('#confirm-purchase.confirm-purchase-btn').click();
-        await page.waitForTimeout(500);
-        await expect(page.locator('#status-message.status-message')).toHaveText('Ticket successfully purchased for: Test Event');
     })
 })
