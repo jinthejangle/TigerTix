@@ -1,5 +1,6 @@
 # **TigerTix — Clemson Campus Event Ticketing System**
 ### https://github.com/jinthejangle/TigerTix.git
+### Demo Video: https://drive.google.com/file/d/1zu9YjYZTCiooz_qsrlQYWWQ077dvGIXT/view?usp=sharing
 
 TigerTix is a full-stack microservices-based ticketing system built for Clemson University’s campus events.  
 Users can browse events, purchase tickets, interact with an AI-powered assistant, and use voice input & text-to-speech accessibility features.
